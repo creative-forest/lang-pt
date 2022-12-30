@@ -53,9 +53,7 @@ impl TokenImpl for Token {
 
 #### Building Tokenizer
 
-Tokenization is a pre-processing process where the input text document is split into a sequence of tokens.
-The token stream will then feed into the parser to parse the input document into a meaningful Abstract Syntax Tree (AST). This library can be used to create a LexerlessParser program which discarded the need to separately assign a Tokenizer. However, a tokenizer often makes a parser perform faster than parsing without a lexer.
-In this example, we will be creating a DefaultParser program that gets tokenized input from the tokenizer.
+Tokenization is a pre-processing process where the input text document is split into a sequence of tokens. A parser program will then use token stream input and parse them into a meaningful Abstract Syntax Tree (AST). This library can be used to create a LexerlessParser program which discarded the need to separately assign a Tokenizer. However, a tokenizer often makes a parser perform faster than parsing without a lexer. In this example, we will be creating a DefaultParser program that gets tokenized input from the tokenizer.
 
 Before building a complete tokenizer for javascript expression, we will first implement a tokenizer for simple arithmetic expressions consisting of number, identifier, and arithmetic operators. A tokenizer consists of lexeme utilities which are responsible to create tokens at incremental position of the input.
 Check out the [lexeme](crate::lexeme) API documentation to get overview of the available lexeme utilities and their functionalities.
