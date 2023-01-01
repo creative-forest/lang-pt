@@ -1,8 +1,6 @@
-use once_cell::unsync::OnceCell;
-
-use crate::{util::Log, ImplementationError, TokenImpl};
-
 use super::{NTHelper, ProductionLogger};
+use crate::{util::Log, ImplementationError};
+use once_cell::unsync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
     fmt::Write,
@@ -34,11 +32,10 @@ fn build_circular_format(id: &str, connected_set: &HashMap<&str, usize>) -> Stri
     }
 }
 
-impl<TToken> NTHelper<TToken> {
+impl NTHelper {
     fn new(identifier: &'static str) -> Self {
         Self {
             identifier,
-            first_set: OnceCell::new(),
             nullability: OnceCell::new(),
             null_hidden: OnceCell::new(),
             debugger: OnceCell::new(),
@@ -86,18 +83,18 @@ impl<TToken> NTHelper<TToken> {
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
     }
 }
-impl<TToken: TokenImpl> NTHelper<TToken> {
-    fn init_first_set<TF: FnOnce() -> HashSet<TToken>>(&self, f: TF) -> &Vec<TToken> {
-        self.first_set.get_or_init(|| {
-            let token_set_map = f();
-            let mut children_set: Vec<TToken> = token_set_map.into_iter().collect();
-            children_set.sort();
-            children_set
-        })
-    }
+impl NTHelper {
+    // fn init_first<TF: FnOnce() -> HashSet<TToken>>(&self, f: TF) -> &Vec<TToken> {
+    //     self.first_set.get_or_init(|| {
+    //         let token_set_map = f();
+    //         let mut children_set: Vec<TToken> = token_set_map.into_iter().collect();
+    //         children_set.sort();
+    //         children_set
+    //     })
+    // }
 }
 
-impl<TToken: TokenImpl> ProductionLogger for NTHelper<TToken> {
+impl ProductionLogger for NTHelper {
     fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
         self.debugger.get()
     }

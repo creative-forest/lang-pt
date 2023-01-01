@@ -4,7 +4,7 @@ use crate::{
         Concat, EOFProd, List, Lookahead, NonStructural, ProductionBuilder, TokenField,
         TokenFieldSet, Union,
     },
-    DefaultParser, NodeImpl, TokenImpl, Tokenizer,
+    DefaultParser, NodeImpl, TokenImpl, Tokenizer, util::Log,
 };
 use std::rc::Rc;
 
@@ -180,6 +180,7 @@ fn non_structural_test() {
         vec![semi_colon, lookahead_eof, non_structural_line_break],
     ));
 
+    statement_termination.set_log(Log::Verbose("statement-termination")).unwrap();
     let var_declaration = Rc::new(
         Concat::new(
             "var_declaration",
@@ -192,6 +193,9 @@ fn non_structural_test() {
         )
         .into_node(Some(NodeValue::VarAssignment)),
     );
+
+ 
+
     let list_var_declaration = Rc::new(List::new(&var_declaration));
 
     let root = Rc::new(
@@ -200,10 +204,7 @@ fn non_structural_test() {
 
     let parser = DefaultParser::new(Rc::new(tokenizer()), root).unwrap();
 
-    let code = r"
-        let ax:number
-        let ax:string
-    ";
+    let code = "let ax:number\nlet ax:string";
 
     let tree_node = parser.parse(code.as_bytes()).unwrap();
     tree_node[0].print().unwrap();

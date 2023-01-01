@@ -106,7 +106,7 @@ impl<TP: IProduction> IProduction for List<TP> {
         self.get_symbol().validate(first_sets, visited_prod)
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
@@ -117,14 +117,14 @@ impl<TP: IProduction> IProduction for List<TP> {
         self.log_entry();
         let result = self.consume(index, cache, |moved_pointer, cache| {
             self.get_symbol()
-                .eat_fltr_ptr(code, moved_pointer, token_stream, cache)
+                .advance_fltr_ptr(code, moved_pointer, token_stream, cache)
         });
         #[cfg(debug_assertions)]
         self.log_filtered_result(code, index, token_stream, &result);
         result
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &Code,
         index: StreamPtr,
@@ -135,14 +135,14 @@ impl<TP: IProduction> IProduction for List<TP> {
         self.log_entry();
         let result = self.consume(index, cache, |moved_pointer, cache| {
             self.get_symbol()
-                .eat_token_ptr(code, moved_pointer, token_stream, cache)
+                .advance_token_ptr(code, moved_pointer, token_stream, cache)
         });
         #[cfg(debug_assertions)]
         self.log_lex_result(code, index, token_stream, &result);
         result
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,
@@ -151,7 +151,7 @@ impl<TP: IProduction> IProduction for List<TP> {
         #[cfg(debug_assertions)]
         self.log_entry();
         let result = self.consume(index, cache, |moved_pointer, cache| {
-            self.get_symbol().eat_ptr(code, moved_pointer, cache)
+            self.get_symbol().advance_ptr(code, moved_pointer, cache)
         });
 
         #[cfg(debug_assertions)]

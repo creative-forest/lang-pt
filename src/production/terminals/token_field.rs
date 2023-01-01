@@ -64,7 +64,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenField<TN, TL> {
         first_set.insert(self.token);
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         _code: &Code,
         index: FltrPtr,
@@ -101,7 +101,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenField<TN, TL> {
         }
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         _code: &Code,
         index: StreamPtr,
@@ -134,7 +134,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenField<TN, TL> {
         }
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         _: &Code,
         _: usize,
@@ -172,7 +172,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenField<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> TokenFieldSet<TN, TL> {
-    /// Create a new TokenListTerminal.
+    /// Create a new [TokenFieldSet].
     /// ## Arguments
     /// * `token_set` - A set of tuples of token which will be matched with the input tokens and optional node value.
     /// Provided [Some] node value will create a node in [AST](crate::ASTNode) while [None] value will hide the tree from [AST](crate::ASTNode).   
@@ -182,6 +182,26 @@ impl<TN: NodeImpl, TL: TokenImpl> TokenFieldSet<TN, TL> {
 
         Self {
             token_set,
+            debugger: OnceCell::new(),
+            rule_name: OnceCell::new(),
+        }
+    }
+    /// Create a new [TokenFieldSet] for same node value.
+    /// ## Arguments
+    /// * `node_value` - Optional node values.
+    /// * `token_set` - A set of tokens which will be matched with the input tokens.
+    /// Provided [Some] node value will create a node in [AST](crate::ASTNode) while [None] value will hide the tree from [AST](crate::ASTNode).   
+
+    pub fn with_value(node_value: Option<TN>, token_set: Vec<TL>) -> Self {
+        let mut tokens: Vec<(TL, Option<TN>)> = token_set
+            .into_iter()
+            .map(|t| (t, node_value.clone()))
+            .collect();
+
+        tokens.sort_by(|t1, t2| t1.0.cmp(&t2.0));
+
+        Self {
+            token_set: tokens,
             debugger: OnceCell::new(),
             rule_name: OnceCell::new(),
         }
@@ -235,7 +255,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenFieldSet<TN, TL> {
         first_set.extend(self.token_set.iter().map(|(t, _)| t));
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         _code: &Code,
         index: FltrPtr,
@@ -280,7 +300,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenFieldSet<TN, TL> {
         }
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         _code: &Code,
         index: StreamPtr,
@@ -307,7 +327,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenFieldSet<TN, TL> {
                             Some((index, index + 1)),
                         ),
                     )),
-                    None => todo!(),
+                    None => Ok(SuccessData::hidden(index + 1)),
                 }
             }
             Err(_) => {
@@ -318,13 +338,13 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenFieldSet<TN, TL> {
         }
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         _: &Code,
         _: usize,
         _: &mut Cache<usize, Self::Node>,
     ) -> ParsedResult<usize, Self::Node> {
-        panic!("Bug! TokenListTerminal should not be called with lexer-less parsing.")
+        panic!("Bug! [TokenFieldSet] should not be called with lexer-less parsing.")
     }
 
     fn is_nullable_n_hidden(&self) -> bool {

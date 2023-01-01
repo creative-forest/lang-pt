@@ -9,6 +9,21 @@ impl Position {
     }
 }
 
+impl From<&[u8]> for Position {
+    fn from(code: &[u8]) -> Self {
+        let mut pointer: usize = 0;
+        let mut line: usize = 0;
+        for c in code {
+            if *c == b'\n' {
+                line += 1;
+            }
+            pointer += 1;
+        }
+        let s = unsafe { std::str::from_utf8_unchecked(&code[pointer..]) };
+        Position::new(line + 1, s.len() + 1)
+    }
+}
+
 impl Display for Position {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("")

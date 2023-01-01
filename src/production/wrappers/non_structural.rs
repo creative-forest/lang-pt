@@ -87,7 +87,7 @@ impl<TProd: IProduction> IProduction for NonStructural<TProd> {
         self.get_symbol().validate(first_sets, visited_prod)
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
@@ -105,7 +105,7 @@ impl<TProd: IProduction> IProduction for NonStructural<TProd> {
 
         let parsed_data =
             self.get_symbol()
-                .eat_token_ptr(code, start_segment + 1, token_stream, cache)?;
+                .advance_token_ptr(code, start_segment + 1, token_stream, cache)?;
 
         let result = if self.fill_range {
             let end_segment = token_stream.get_stream_ptr(index);
@@ -124,7 +124,7 @@ impl<TProd: IProduction> IProduction for NonStructural<TProd> {
         result
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &Code,
         index: StreamPtr,
@@ -132,15 +132,15 @@ impl<TProd: IProduction> IProduction for NonStructural<TProd> {
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<StreamPtr, Self::Node> {
         self.get_symbol()
-            .eat_token_ptr(code, index, stream, cache)
+            .advance_token_ptr(code, index, stream, cache)
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,
         cache: &mut Cache<usize, Self::Node>,
     ) -> ParsedResult<usize, Self::Node> {
-        self.get_symbol().eat_ptr(code, index, cache)
+        self.get_symbol().advance_ptr(code, index, cache)
     }
 }

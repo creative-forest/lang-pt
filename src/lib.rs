@@ -391,7 +391,7 @@ pub trait IProduction: Display {
         visited_prod: &mut HashSet<&'id str>,
     ) -> Result<(), ImplementationError>;
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
@@ -399,7 +399,7 @@ pub trait IProduction: Display {
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<FltrPtr, Self::Node>;
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &Code,
         index: StreamPtr,
@@ -407,7 +407,7 @@ pub trait IProduction: Display {
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<StreamPtr, Self::Node>;
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,

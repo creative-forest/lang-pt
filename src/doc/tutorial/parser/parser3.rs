@@ -289,8 +289,8 @@ fn flatten() {
         &cmp_expr_node,
         true,
         vec![
-            (truthy_expr_part.clone(), Some(NodeValue::Truthy)),
-            (instance_of_expr_part, Some(NodeValue::InstanceOfExpr)),
+            (truthy_expr_part.clone(), NodeValue::Truthy),
+            (instance_of_expr_part, NodeValue::InstanceOfExpr),
         ],
     ));
 

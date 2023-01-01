@@ -89,7 +89,7 @@ impl<TProd: IProduction> IProduction for Lookahead<TProd> {
         self.get_production().validate(first_sets, visited_prod)
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
@@ -101,7 +101,7 @@ impl<TProd: IProduction> IProduction for Lookahead<TProd> {
 
         let result = self
             .get_production()
-            .eat_fltr_ptr(code, index, token_stream, cached)
+            .advance_fltr_ptr(code, index, token_stream, cached)
             .map(|_| match &self.node_value {
                 Some(node) => {
                     let pointer = token_stream[index].start;
@@ -126,7 +126,7 @@ impl<TProd: IProduction> IProduction for Lookahead<TProd> {
         result
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &Code,
         index: StreamPtr,
@@ -135,7 +135,7 @@ impl<TProd: IProduction> IProduction for Lookahead<TProd> {
     ) -> ParsedResult<StreamPtr, Self::Node> {
         let result = self
             .get_production()
-            .eat_token_ptr(code, index, token_stream, cache)
+            .advance_token_ptr(code, index, token_stream, cache)
             .map(|_| match &self.node_value {
                 Some(node) => {
                     let pointer = token_stream[index].start;
@@ -159,7 +159,7 @@ impl<TProd: IProduction> IProduction for Lookahead<TProd> {
         result
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,
@@ -167,7 +167,7 @@ impl<TProd: IProduction> IProduction for Lookahead<TProd> {
     ) -> ParsedResult<usize, Self::Node> {
         let result =
             self.get_production()
-                .eat_ptr(code, index, cache)
+                .advance_ptr(code, index, cache)
                 .map(|_| match &self.node_value {
                     Some(node) => SuccessData::new(
                         index,

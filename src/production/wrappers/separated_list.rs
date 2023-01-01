@@ -186,7 +186,7 @@ impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> IProd
         self.separator.impl_grammar(writer, visited)
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &Code,
         index: StreamPtr,
@@ -200,11 +200,11 @@ impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> IProd
             cache,
             |moved_pointer, c| {
                 self.get_production()
-                    .eat_token_ptr(code, moved_pointer, token_stream, c)
+                    .advance_token_ptr(code, moved_pointer, token_stream, c)
             },
             |moved_pointer, c| {
                 self.get_separator()
-                    .eat_token_ptr(code, moved_pointer, token_stream, c)
+                    .advance_token_ptr(code, moved_pointer, token_stream, c)
             },
         );
         #[cfg(debug_assertions)]
@@ -212,7 +212,7 @@ impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> IProd
         result
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,
@@ -225,16 +225,16 @@ impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> IProd
             cache,
             |moved_pointer, c| {
                 self.get_production()
-                    .eat_ptr(code, moved_pointer, c)
+                    .advance_ptr(code, moved_pointer, c)
             },
-            |moved_pointer, c| self.get_separator().eat_ptr(code, moved_pointer, c),
+            |moved_pointer, c| self.get_separator().advance_ptr(code, moved_pointer, c),
         );
         #[cfg(debug_assertions)]
         self.log_result(code, index, &result);
         result
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
@@ -249,11 +249,11 @@ impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> IProd
             cache,
             |moved_pointer, c| {
                 self.get_production()
-                    .eat_fltr_ptr(code, moved_pointer, token_stream, c)
+                    .advance_fltr_ptr(code, moved_pointer, token_stream, c)
             },
             |moved_pointer, c| {
                 self.get_separator()
-                    .eat_fltr_ptr(code, moved_pointer, token_stream, c)
+                    .advance_fltr_ptr(code, moved_pointer, token_stream, c)
             },
         );
 

@@ -65,7 +65,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for ConstantField<TN, TL> {
         panic!("StringField terminal is not expected with Token implementations");
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         _: &Code,
         _: FltrPtr,
@@ -75,7 +75,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for ConstantField<TN, TL> {
         panic!("Bug! ConstTerminal should not used with tokenized parsing.")
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         _: &Code,
         _: StreamPtr,
@@ -85,7 +85,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for ConstantField<TN, TL> {
         panic!("Bug! ConstTerminal should not used with tokenized parsing.")
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,
@@ -213,7 +213,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for ConstantFieldSet<TN, TL> {
         panic!("First  set implementation is not expected to be called.");
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         _: &Code,
         _: FltrPtr,
@@ -223,7 +223,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for ConstantFieldSet<TN, TL> {
         panic!("Bug! ConstListTerminal should not used for tokenized parsing.")
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         _: &Code,
         _: StreamPtr,
@@ -233,7 +233,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for ConstantFieldSet<TN, TL> {
         panic!("Bug! ConstListTerminal should not used for tokenized parsing.")
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,

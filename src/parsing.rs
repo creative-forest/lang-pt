@@ -41,7 +41,7 @@ impl<TN: NodeImpl, TL: TokenImpl> DefaultParser<TN, TL> {
         let index = FltrPtr::default();
         match self
             .root
-            .eat_fltr_ptr(code, index, &filtered_stream, &mut cached_data)
+            .advance_fltr_ptr(code, index, &filtered_stream, &mut cached_data)
         {
             Ok(sd) => Ok(sd.children),
             Err(err) => Err(cached_data.create_error(code, &filtered_stream, err)),
@@ -77,6 +77,7 @@ impl<TN: NodeImpl, TL: TokenImpl> DefaultParser<TN, TL> {
         id: &'static str,
         production: &Rc<T>,
     ) {
+        println!("Adding debug production {}", id);
         self.debug_production_map.insert(id, production.clone());
     }
 
@@ -116,7 +117,7 @@ impl<TN: NodeImpl, TL: TokenImpl> DefaultParser<TN, TL> {
         cached_data.update_index(pointer);
 
         let success_data = production
-            .eat_fltr_ptr(&code, index, &stream, &mut cached_data)
+            .advance_fltr_ptr(&code, index, &stream, &mut cached_data)
             .map_err(|err| cached_data.create_error(&code, &stream, err))?;
         Ok(success_data.children)
     }
@@ -147,7 +148,7 @@ impl<TN: NodeImpl, TL: TokenImpl> LexerlessParser<TN, TL> {
         let mut cached_data: Cache<usize, TN> = Cache::root();
 
         let index = usize::default();
-        match self.root.eat_ptr(&code, index, &mut cached_data) {
+        match self.root.advance_ptr(&code, index, &mut cached_data) {
             Ok(sd) => Ok(sd.children),
             Err(err) => Err(cached_data.create_error(&code, err)),
         }
@@ -196,7 +197,7 @@ impl<TN: NodeImpl, TL: TokenImpl> LexerlessParser<TN, TL> {
         cached_data.update_index(pointer);
 
         let success_data = production
-            .eat_ptr(&code, pointer, &mut cached_data)
+            .advance_ptr(&code, pointer, &mut cached_data)
             .map_err(|err| cached_data.create_error(&code, err))?;
         Ok(success_data.children)
     }

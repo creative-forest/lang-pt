@@ -84,7 +84,7 @@ impl<TProd: IProduction> IProduction for Nullable<TProd> {
         self.get_production().validate(first_sets, visited_prod)
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
@@ -93,7 +93,7 @@ impl<TProd: IProduction> IProduction for Nullable<TProd> {
     ) -> ParsedResult<FltrPtr, Self::Node> {
         match self
             .get_production()
-            .eat_fltr_ptr(code, index, token_stream, cached)
+            .advance_fltr_ptr(code, index, token_stream, cached)
         {
             Ok(success_data) => Ok(success_data),
             Err(err) => {
@@ -109,7 +109,7 @@ impl<TProd: IProduction> IProduction for Nullable<TProd> {
         }
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &Code,
         index: StreamPtr,
@@ -118,7 +118,7 @@ impl<TProd: IProduction> IProduction for Nullable<TProd> {
     ) -> ParsedResult<StreamPtr, Self::Node> {
         match self
             .get_production()
-            .eat_token_ptr(code, index, stream, cache)
+            .advance_token_ptr(code, index, stream, cache)
         {
             Ok(success_data) => Ok(success_data),
             Err(err) => {
@@ -133,13 +133,13 @@ impl<TProd: IProduction> IProduction for Nullable<TProd> {
         }
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,
         cache: &mut Cache<usize, Self::Node>,
     ) -> ParsedResult<usize, Self::Node> {
-        match self.get_production().eat_ptr(code, index, cache) {
+        match self.get_production().advance_ptr(code, index, cache) {
             Ok(success_data) => Ok(success_data),
             Err(err) => {
                 if err.is_invalid() {

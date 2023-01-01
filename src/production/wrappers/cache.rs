@@ -76,7 +76,7 @@ impl<TProd: IProduction> IProduction for Cacheable<TProd> {
         self.get_production().validate(first_sets, visited_prod)
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
@@ -90,7 +90,7 @@ impl<TProd: IProduction> IProduction for Cacheable<TProd> {
         let result = match memory_cache.find(self.cache_key, lex_data.start) {
             Some(result) => result.clone(),
             None => {
-                let advance_result = self.get_production().eat_fltr_ptr(
+                let advance_result = self.get_production().advance_fltr_ptr(
                     code,
                     index,
                     token_stream,
@@ -107,7 +107,7 @@ impl<TProd: IProduction> IProduction for Cacheable<TProd> {
         result
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &Code,
         lexical_index: StreamPtr,
@@ -118,11 +118,11 @@ impl<TProd: IProduction> IProduction for Cacheable<TProd> {
             panic!("Cacheability is not implemented for Non-structural production. Remove Cacheable wrapper for {} production",self.get_production());
         } else {
             self.get_production()
-                .eat_token_ptr(code, lexical_index, token_stream, memory_cache)
+                .advance_token_ptr(code, lexical_index, token_stream, memory_cache)
         }
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,
@@ -134,7 +134,7 @@ impl<TProd: IProduction> IProduction for Cacheable<TProd> {
         let result = match cache.find(self.cache_key, index) {
             Some(result) => result.clone(),
             None => {
-                let advance_result = self.get_production().eat_ptr(code, index, cache);
+                let advance_result = self.get_production().advance_ptr(code, index, cache);
                 cache.insert(self.cache_key, index, advance_result.clone());
                 advance_result
             }

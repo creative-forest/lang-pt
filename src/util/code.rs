@@ -36,12 +36,12 @@ impl<'c> Code<'c> {
         };
 
         if index == 0 {
-            Position::new(1, pointer)
+            let s = unsafe { std::str::from_utf8_unchecked(&self.value[..pointer]) };
+            Position::new(1, s.len() + 1)
         } else {
-            let s = unsafe {
-                std::str::from_utf8_unchecked(&self.value[line_breaks[index - 1]..pointer])
-            };
-            Position::new(index, s.len() + 1)
+            let break_point = line_breaks[index - 1] + 1;
+            let s = unsafe { std::str::from_utf8_unchecked(&self.value[break_point..pointer]) };
+            Position::new(index + 1, s.len() + 1)
         }
     }
 }

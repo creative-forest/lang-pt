@@ -1,4 +1,4 @@
-use crate::{FltrPtr, TokenStream, Lex, StreamPtr, TokenImpl};
+use crate::{ASTNode, FltrPtr, Lex, NodeImpl, StreamPtr, SuccessData, TokenImpl, TokenStream};
 use std::ops::Index;
 
 impl<'lex, TNode> TokenStream<'lex, TNode> {
@@ -35,6 +35,25 @@ impl<'lex, TToken: TokenImpl> TokenStream<'lex, TToken> {
     }
 }
 impl<'lex, TToken> TokenStream<'lex, TToken> {
+    pub fn create_node<TN: NodeImpl>(
+        &self,
+        index: FltrPtr,
+        node_value: TN,
+        data: SuccessData<FltrPtr, TN>,
+    ) -> SuccessData<FltrPtr, TN> {
+        let node = ASTNode::new(
+            node_value.clone(),
+            self.pointer(index),
+            self.pointer(data.consumed_index),
+            Some((
+                self.get_stream_ptr(index),
+                self.get_stream_ptr(data.consumed_index),
+            )),
+            data.children,
+        );
+        SuccessData::tree(data.consumed_index, node)
+    }
+
     pub fn filtered_index_at(&self, code_pointer: usize) -> Result<FltrPtr, FltrPtr> {
         match self
             .filtered_stream
@@ -44,10 +63,7 @@ impl<'lex, TToken> TokenStream<'lex, TToken> {
             Err(s) => Err(FltrPtr(s)),
         }
     }
-    pub fn find_filtered_index(
-        &self,
-        index: &StreamPtr,
-    ) -> Result<FltrPtr, FltrPtr> {
+    pub fn find_filtered_index(&self, index: &StreamPtr) -> Result<FltrPtr, FltrPtr> {
         match self.filtered_stream.binary_search(index) {
             Ok(s) => Ok(FltrPtr(s)),
             Err(s) => Err(FltrPtr(s)),

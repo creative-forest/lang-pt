@@ -294,8 +294,8 @@ fn flatten() {
         &cmp_expr_node,
         true,
         vec![
-            (truthy_expr_part.clone(), Some(NodeValue::Truthy)),
-            (instance_of_expr_part, Some(NodeValue::InstanceOfExpr)),
+            (truthy_expr_part.clone(), NodeValue::Truthy),
+            (instance_of_expr_part, NodeValue::InstanceOfExpr),
         ],
     ));
 
@@ -348,9 +348,9 @@ fn flatten() {
         .unwrap();
 
     let parser = DefaultParser::new(Rc::new(tokenizer()), root_node).unwrap();
-   
+
     parser.parse(b"b instanceOf Object;").unwrap();
-   
+
     let parsed_addition_tree = parser.parse(b"a+b-10>90?80:f+8").unwrap();
     assert_eq!(parsed_addition_tree.len(), 1);
     parsed_addition_tree[0].print().unwrap();

@@ -90,9 +90,8 @@ pub struct EOFProd<TN: NodeImpl = u8, TL = i8> {
     _token: PhantomData<TL>,
 }
 
-struct NTHelper<TToken> {
+struct NTHelper {
     identifier: &'static str,
-    first_set: OnceCell<Vec<TToken>>,
     nullability: OnceCell<bool>,
     null_hidden: OnceCell<bool>,
     debugger: OnceCell<Log<&'static str>>,
@@ -177,7 +176,7 @@ struct NTHelper<TToken> {
 /// ```
 pub struct Concat<TN: NodeImpl = u8, TL: TokenImpl = i8> {
     symbols: OnceCell<Vec<Rc<dyn IProduction<Node = TN, Token = TL>>>>,
-    nt_helper: NTHelper<TL>,
+    nt_helper: NTHelper,
 }
 
 /// A non-terminal utility to implement alternative derivations of productions.
@@ -255,10 +254,11 @@ pub struct Concat<TN: NodeImpl = u8, TL: TokenImpl = i8> {
 /// ```
 pub struct Union<TN: NodeImpl = u8, TL: TokenImpl = i8> {
     symbols: OnceCell<Vec<Rc<dyn IProduction<Node = TN, Token = TL>>>>,
-    nt_helper: NTHelper<TL>,
+    nt_helper: NTHelper,
+    first_set: OnceCell<(bool, Vec<(TL, Vec<usize>)>)>,
 }
 
-pub type TSuffixMap<TN, TL> = (Rc<dyn IProduction<Node = TN, Token = TL>>, Option<TN>);
+pub type TSuffixMap<TN, TL> = (Rc<dyn IProduction<Node = TN, Token = TL>>, TN);
 
 /// A production utility to parse multiple tails/end symbols for same body/starting symbol.
 ///
@@ -271,7 +271,7 @@ pub type TSuffixMap<TN, TL> = (Rc<dyn IProduction<Node = TN, Token = TL>>, Optio
 /// The tails of the production Y<sub>1</sub>..<sub>n</sub> will then be sequentially tried to parse until it encounter first success.
 /// The right most tail production Y<sub></sub> can also be a null production (ε) for standalone [Suffixes].
 /// # Example
-/// 
+///
 /// ```
 /// use lang_pt::production::{ConstantField, ProductionBuilder};
 /// use lang_pt::NodeImpl;
@@ -334,8 +334,8 @@ pub type TSuffixMap<TN, TL> = (Rc<dyn IProduction<Node = TN, Token = TL>>, Optio
 ///     &id,
 ///     false,
 ///     vec![
-///         (array_index, Some(NodeValue::ArrayAccess)),
-///         (function_call, Some(NodeValue::FunctionCall)),
+///         (array_index, NodeValue::ArrayAccess),
+///         (function_call, NodeValue::FunctionCall),
 ///     ],
 /// ));
 ///
@@ -365,7 +365,9 @@ pub struct Suffixes<TP: IProduction> {
     left: Rc<TP>,
     standalone: bool,
     suffixes: OnceCell<Vec<TSuffixMap<TP::Node, TP::Token>>>,
-    nt_helper: NTHelper<TP::Token>,
+    nt_helper: NTHelper,
+    suffix_first_set: OnceCell<(bool, Vec<(TP::Token, Vec<usize>)>)>,
+    null_suffix_index: OnceCell<Option<usize>>,
 }
 
 /// An utility to parse a terminal or non-terminal symbols one or multiple times.
@@ -1139,7 +1141,7 @@ pub struct Cacheable<TProd: IProduction> {
     debugger: OnceCell<Log<&'static str>>,
 }
 
-/// A builder utility trait implemented for all generic [IProduction] structure. 
+/// A builder utility trait implemented for all generic [IProduction] structure.
 pub trait ProductionBuilder: IProduction {
     fn into_list(self) -> List<Self>
     where

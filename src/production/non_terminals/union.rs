@@ -1,6 +1,8 @@
 use crate::{
     production::{NTHelper, ProductionLogger, Union},
-    Cache, IProduction, ImplementationError, NodeImpl, ParsedResult, ProductionError, TokenImpl,
+    util::Code,
+    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult,
+    ProductionError, SuccessData, TokenImpl, TokenStream,
 };
 use once_cell::unsync::OnceCell;
 use std::fmt::Display;
@@ -18,6 +20,7 @@ impl<TN: NodeImpl, TL: TokenImpl> Union<TN, TL> {
         Union {
             symbols: OnceCell::new(),
             nt_helper: NTHelper::new(identifier),
+            first_set: OnceCell::new(),
         }
     }
 
@@ -37,6 +40,7 @@ impl<TN: NodeImpl, TL: TokenImpl> Union<TN, TL> {
         Self {
             symbols: production_cell,
             nt_helper: NTHelper::new(identifier),
+            first_set: OnceCell::new(),
         }
     }
 
@@ -71,23 +75,31 @@ impl<TN: NodeImpl, TL: TokenImpl> Union<TN, TL> {
         })
     }
 
-    fn consume<
-        T,
-        TCache,
-        P: Fn(
-            &Rc<dyn IProduction<Node = TN, Token = TL>>,
-            &mut Cache<TCache, TN>,
-        ) -> ParsedResult<T, TN>,
-    >(
-        &self,
-        cache: &mut Cache<TCache, TN>,
-        parse_production: P,
-    ) -> ParsedResult<T, TN> {
-        for prod in self.get_productions() {
-            match parse_production(prod, cache) {
-                Ok(s) => return Ok(s),
+    fn get_result<'s, IT: Iterator<Item = &'s Rc<dyn IProduction<Node = TN, Token = TL>>>>(
+        &'s self,
+        productions: IT,
+        code: &Code,
+        index: FltrPtr,
+        token_stream: &TokenStream<TL>,
+        cache: &mut Cache<FltrPtr, TN>,
+    ) -> ParsedResult<FltrPtr, TN> {
+        for prod in productions {
+            match prod.advance_fltr_ptr(code, index, token_stream, cache) {
+                Ok(s) => {
+                    #[cfg(debug_assertions)]
+                    self.nt_helper.log_success(
+                        code,
+                        token_stream[index].start,
+                        token_stream[s.consumed_index].start,
+                    );
+
+                    return Ok(s);
+                }
                 Err(err) => {
                     if err.is_invalid() {
+                        #[cfg(debug_assertions)]
+                        self.nt_helper
+                            .log_error(code, token_stream[index].start, &err);
                         // println!("Returning validation Err:{:?}", err);
                         return Err(err);
                     }
@@ -95,7 +107,42 @@ impl<TN: NodeImpl, TL: TokenImpl> Union<TN, TL> {
             }
         }
 
+        #[cfg(debug_assertions)]
+        self.nt_helper
+            .log_error(code, token_stream[index].start, &ProductionError::Unparsed);
+
         Err(ProductionError::Unparsed)
+    }
+
+    fn obtain_first_set(&self) -> &(bool, Vec<(TL, Vec<usize>)>) {
+        self.first_set.get_or_init(|| {
+            let mut children_set: HashMap<TL, HashSet<usize>> = HashMap::new();
+            for (index, prod) in self.get_productions().iter().enumerate() {
+                let mut child_set = HashSet::new();
+                prod.impl_first_set(&mut child_set);
+
+                for t in child_set {
+                    let indexes = children_set.entry(t).or_insert_with(|| HashSet::new());
+                    indexes.insert(index);
+                }
+                if prod.is_nullable() {
+                    for (_, v) in &mut children_set {
+                        v.insert(index);
+                    }
+                    break; // We do not want to visit more production if we find nullable production.
+                }
+            }
+            let mut v: Vec<(TL, Vec<usize>)> = children_set
+                .into_iter()
+                .map(|(t, hs)| {
+                    let mut v = hs.into_iter().collect::<Vec<usize>>();
+                    v.sort();
+                    (t, v)
+                })
+                .collect();
+            v.sort_by_key(|(t, _)| *t);
+            (v.iter().all(|(t, _)| t.is_structural()), v)
+        })
     }
 }
 
@@ -150,14 +197,9 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Union<TN, TL> {
     }
 
     fn impl_first_set(&self, first_set: &mut HashSet<Self::Token>) {
-        let children_set = self.nt_helper.init_first_set(|| {
-            let mut children_set = HashSet::new();
-            for prod in self.get_productions() {
-                prod.impl_first_set(&mut children_set)
-            }
-            children_set
-        });
-        first_set.extend(children_set);
+        for prod in self.get_productions() {
+            prod.impl_first_set(first_set)
+        }
     }
 
     fn impl_grammar(
@@ -203,48 +245,112 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Union<TN, TL> {
         Ok(())
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
-        code: &crate::util::Code,
-        index: crate::FltrPtr,
-        stream: &crate::TokenStream<Self::Token>,
-        cache: &mut Cache<crate::FltrPtr, Self::Node>,
-    ) -> ParsedResult<crate::FltrPtr, Self::Node> {
+        code: &Code,
+        index: FltrPtr,
+        token_stream: &TokenStream<Self::Token>,
+        cache: &mut Cache<FltrPtr, Self::Node>,
+    ) -> ParsedResult<FltrPtr, Self::Node> {
         #[cfg(debug_assertions)]
         self.nt_helper.log_entry();
 
-        let result = self.consume(cache, |prod, cache| {
-            prod.eat_fltr_ptr(code, index, stream, cache)
-        });
+        let immediate_lex = &token_stream[index];
 
-        #[cfg(debug_assertions)]
-        self.nt_helper
-            .log_filtered_result(code, index, stream, &result);
+        let (is_structural, first_sets) = self.obtain_first_set();
 
-        result
+        let productions = self.get_productions();
+
+        if *is_structural {
+            match first_sets.binary_search_by_key(&immediate_lex.token, |(t, _)| *t) {
+                Ok(p_index) => self.get_result(
+                    first_sets[p_index].1.iter().map(|j| &productions[*j]),
+                    code,
+                    index,
+                    token_stream,
+                    cache,
+                ),
+                Err(_) => {
+                    if self.is_nullable_n_hidden() {
+                        Ok(SuccessData::hidden(index))
+                    } else if self.is_nullable() {
+                        let tree = ASTNode::null(
+                            token_stream[index].start,
+                            Some(token_stream.get_stream_ptr(index)),
+                        );
+                        Ok(SuccessData::tree(index, tree))
+                    } else {
+                        #[cfg(debug_assertions)]
+                        self.nt_helper.log_error(
+                            code,
+                            token_stream[index].start,
+                            &ProductionError::Unparsed,
+                        );
+
+                        Err(ProductionError::Unparsed)
+                    }
+                }
+            }
+        } else {
+            self.get_result(productions.iter(), code, index, token_stream, cache)
+        }
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &crate::util::Code,
         index: crate::StreamPtr,
-        stream: &crate::TokenStream<Self::Token>,
+        token_stream: &crate::TokenStream<Self::Token>,
         cache: &mut Cache<crate::FltrPtr, Self::Node>,
     ) -> ParsedResult<crate::StreamPtr, Self::Node> {
         #[cfg(debug_assertions)]
         self.nt_helper.log_entry();
 
-        let result = self.consume(cache, |prod, cache| {
-            prod.eat_token_ptr(code, index, stream, cache)
-        });
+        let immediate_lex = &token_stream[index];
 
-        #[cfg(debug_assertions)]
-        self.nt_helper.log_lex_result(code, index, stream, &result);
+        let (_, first_sets) = self.obtain_first_set();
 
-        result
+        if let Ok(p_index) = first_sets.binary_search_by_key(&immediate_lex.token, |(t, _)| *t) {
+            let productions = self.get_productions();
+            for prod in first_sets[p_index].1.iter().map(|j| &productions[*j]) {
+                match prod.advance_token_ptr(code, index, token_stream, cache) {
+                    Ok(s) => {
+                        #[cfg(debug_assertions)]
+                        self.nt_helper.log_success(
+                            code,
+                            immediate_lex.start,
+                            token_stream[s.consumed_index].start,
+                        );
+
+                        return Ok(s);
+                    }
+                    Err(err) => {
+                        if err.is_invalid() {
+                            #[cfg(debug_assertions)]
+                            self.nt_helper.log_error(code, immediate_lex.start, &err);
+                            // println!("Returning validation Err:{:?}", err);
+                            return Err(err);
+                        }
+                    }
+                }
+            }
+        }
+
+        if self.is_nullable_n_hidden() {
+            Ok(SuccessData::hidden(index))
+        } else if self.is_nullable() {
+            let tree = ASTNode::null(token_stream[index].start, Some(index));
+            Ok(SuccessData::tree(index, tree))
+        } else {
+            #[cfg(debug_assertions)]
+            self.nt_helper
+                .log_error(code, token_stream[index].start, &ProductionError::Unparsed);
+
+            Err(ProductionError::Unparsed)
+        }
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &crate::util::Code,
         index: usize,
@@ -253,11 +359,24 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Union<TN, TL> {
         #[cfg(debug_assertions)]
         self.nt_helper.log_entry();
 
-        let result = self.consume(cache, |prod, cache| prod.eat_ptr(code, index, cache));
+        for prod in self.get_productions() {
+            match prod.advance_ptr(code, index, cache) {
+                Ok(s) => return Ok(s),
+                Err(err) => {
+                    if err.is_invalid() {
+                        #[cfg(debug_assertions)]
+                        self.nt_helper.log_error(code, index, &err);
+
+                        return Err(err);
+                    }
+                }
+            }
+        }
 
         #[cfg(debug_assertions)]
-        self.nt_helper.log_result(code, index, &result);
+        self.nt_helper
+            .log_error(code, index, &ProductionError::Unparsed);
 
-        result
+        Err(ProductionError::Unparsed)
     }
 }

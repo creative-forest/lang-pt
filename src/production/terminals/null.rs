@@ -23,7 +23,7 @@ impl<TN: NodeImpl, TL: TokenImpl> NullProd<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> NullProd<TN, TL> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn set_log(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -69,7 +69,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for NullProd<TN, TL> {
         Result::Ok(())
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         _: &Code,
         index: FltrPtr,
@@ -83,7 +83,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for NullProd<TN, TL> {
         ))
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         _: &Code,
         index: StreamPtr,
@@ -97,7 +97,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for NullProd<TN, TL> {
         ))
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         _: &Code,
         index: usize,

@@ -71,7 +71,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for RegexField<TN, TL> {
         panic!("Bug! RegexField terminal is not expected with Token implementations");
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         _: &Code,
         _: FltrPtr,
@@ -81,7 +81,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for RegexField<TN, TL> {
         panic!("Bug! RegexTerminal should not used for tokenized parsing.")
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         _: &Code,
         _: StreamPtr,
@@ -91,7 +91,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for RegexField<TN, TL> {
         panic!("Bug! RegexTerminal should not used for tokenized parsing.")
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,

@@ -32,7 +32,7 @@ impl<TProd: IProduction> Node<TProd> {
 }
 
 impl<TP: IProduction> Node<TP> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn set_log(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -113,7 +113,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
         self.get_production().validate(first_sets, visited_prod)
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
@@ -125,7 +125,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
 
         let result = self
             .get_production()
-            .eat_fltr_ptr(code, index, token_stream, cached)
+            .advance_fltr_ptr(code, index, token_stream, cached)
             .map(|parsed_data| match &self.node_value {
                 Some(node) => {
                     let tree = ASTNode::new(
@@ -150,7 +150,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
         result
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &Code,
         index: StreamPtr,
@@ -162,7 +162,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
 
         let result = self
             .get_production()
-            .eat_token_ptr(code, index, token_stream, cache)
+            .advance_token_ptr(code, index, token_stream, cache)
             .map(|parsed_data| match &self.node_value {
                 Some(node) => {
                     let tree = ASTNode::new(
@@ -184,7 +184,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
         result
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,
@@ -195,7 +195,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
 
         let result = self
             .get_production()
-            .eat_ptr(code, index, cache)
+            .advance_ptr(code, index, cache)
             .map(|parsed_data| match &self.node_value {
                 Some(node) => {
                     let tree = ASTNode::new(

@@ -65,8 +65,8 @@ fn suffixes_test() {
         &id,
         false,
         vec![
-            (array_index, Some(NodeValue::ArrayAccess)),
-            (function_call, Some(NodeValue::FunctionCall)),
+            (array_index, NodeValue::ArrayAccess),
+            (function_call, NodeValue::FunctionCall),
         ],
     ));
 

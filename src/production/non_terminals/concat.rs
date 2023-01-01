@@ -42,7 +42,7 @@ impl<TN: NodeImpl, TL: TokenImpl> Concat<TN, TL> {
 
     /// Set production symbols for concatenation operation.
     /// ### Arguments
-    /// * `symbols` - A [Vec] of production symbol. 
+    /// * `symbols` - A [Vec] of production symbol.
     pub fn set_symbols(
         &self,
         symbols: Vec<Rc<dyn IProduction<Node = TN, Token = TL>>>,
@@ -154,16 +154,12 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
     }
 
     fn impl_first_set(&self, first_set: &mut HashSet<Self::Token>) {
-        first_set.extend(self.nt_helper.init_first_set(|| {
-            let mut children_set = HashSet::new();
-            for prod in self.get_productions() {
-                prod.impl_first_set(&mut children_set);
-                if !prod.is_nullable() {
-                    break;
-                }
+        for prod in self.get_productions() {
+            prod.impl_first_set(first_set);
+            if !prod.is_nullable() {
+                break;
             }
-            children_set
-        }))
+        }
     }
 
     fn impl_grammar(
@@ -222,7 +218,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
         Ok(())
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &crate::util::Code,
         index: crate::FltrPtr,
@@ -233,7 +229,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
         self.nt_helper.log_entry();
 
         let result = self.consume(index, cache, |prod, moved_pointer, cache| {
-            prod.eat_fltr_ptr(code, moved_pointer, stream, cache)
+            prod.advance_fltr_ptr(code, moved_pointer, stream, cache)
         });
 
         #[cfg(debug_assertions)]
@@ -243,7 +239,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
         result
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &crate::util::Code,
         index: crate::StreamPtr,
@@ -254,7 +250,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
         self.nt_helper.log_entry();
 
         let result = self.consume(index, cache, |prod, moved_pointer, cache| {
-            prod.eat_token_ptr(code, moved_pointer, stream, cache)
+            prod.advance_token_ptr(code, moved_pointer, stream, cache)
         });
 
         #[cfg(debug_assertions)]
@@ -263,7 +259,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
         result
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &crate::util::Code,
         index: usize,
@@ -273,7 +269,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
         self.nt_helper.log_entry();
 
         let result = self.consume(index, cache, |prod, moved_pointer, cache| {
-            prod.eat_ptr(code, moved_pointer, cache)
+            prod.advance_ptr(code, moved_pointer, cache)
         });
 
         #[cfg(debug_assertions)]

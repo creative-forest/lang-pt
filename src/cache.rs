@@ -62,7 +62,8 @@ impl<TNode: NodeImpl> Cache<FltrPtr, TNode> {
         stream: &TokenStream<'lex, TL>,
         err: ProductionError,
     ) -> ParseError {
-        let (pointer, mut error_message) = match err {
+        let mut error_message = String::new();
+        let pointer = match err {
             ProductionError::Unparsed => {
                 let failed_index = match stream.filtered_index_at(self.max_parsed_point) {
                     Ok(i) => i + 1,
@@ -72,37 +73,41 @@ impl<TNode: NodeImpl> Cache<FltrPtr, TNode> {
                 match stream.get(failed_index) {
                     Some(lex_data) => {
                         if lex_data.token == TL::eof() {
-                            (lex_data.start, format!("Unexpected end of file."))
+                            writeln!(error_message, "Unexpected end of file.").unwrap();
                         } else {
-                            if cfg!(debug_assertions) {
-                                (
-                                    lex_data.start,
-                                    format!(
-                                        "Unexpected '{:?}'({}).",
-                                        lex_data.token,
-                                        std::str::from_utf8(
-                                            &code.value[lex_data.start..lex_data.end]
-                                        )
-                                        .unwrap(),
-                                    ),
+                            let s = unsafe {
+                                std::str::from_utf8_unchecked(
+                                    &code.value[lex_data.start..lex_data.end],
                                 )
+                            };
+                            if cfg!(debug_assertions) {
+                                writeln!(
+                                    error_message,
+                                    "Unexpected token {:?}({:?}).",
+                                    s, lex_data.token,
+                                )
+                                .unwrap();
                             } else {
-                                let s =
-                                    std::str::from_utf8(&code.value[lex_data.start..lex_data.end])
-                                        .unwrap();
-                                (lex_data.start, format!("Unexpected '{}'.", s))
+                                writeln!(error_message, "Unexpected {:?}.", s).unwrap();
                             }
                         }
+                        lex_data.start
                     }
-                    None => (code.value.len(), "Unexpected end of file.".into()),
+                    None => {
+                        writeln!(error_message, "Unexpected end of file.").unwrap();
+                        code.value.len()
+                    }
                 }
             }
-            ProductionError::Validation(pointer, message) => (pointer, message),
+            ProductionError::Validation(pointer, message) => {
+                writeln!(error_message, "{}", message).unwrap();
+                pointer
+            }
         };
 
         let position = code.obtain_position(pointer);
 
-        writeln!(error_message, "\nFailed to parse at {}.", position).unwrap();
+        writeln!(error_message, "Failed to parse at {}.", position).unwrap();
 
         ParseError::new(pointer, error_message)
     }

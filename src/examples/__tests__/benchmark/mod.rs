@@ -8,7 +8,7 @@ fn test_parse_time() {
     let lexerless_parser = json_lexerless_grammar();
 
     let code_part = std::fs::read("./src/examples/__tests__/benchmark/example.json").unwrap();
-    let times = 1000;
+    let times = 10000;
 
     let serde_instant = Instant::now();
 

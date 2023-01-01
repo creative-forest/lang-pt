@@ -71,7 +71,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for EOFProd<TN, TL> {
         Result::Ok(())
     }
 
-    fn eat_fltr_ptr(
+    fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
@@ -108,7 +108,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for EOFProd<TN, TL> {
         }
     }
 
-    fn eat_token_ptr(
+    fn advance_token_ptr(
         &self,
         code: &Code,
         index: StreamPtr,
@@ -145,7 +145,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for EOFProd<TN, TL> {
         }
     }
 
-    fn eat_ptr(
+    fn advance_ptr(
         &self,
         code: &Code,
         index: usize,
