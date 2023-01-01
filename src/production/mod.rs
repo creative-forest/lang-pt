@@ -24,7 +24,7 @@ mod __tests__;
 use crate::{
     util::{Code, Log},
     ASTNode, CacheKey, FieldTree, FltrPtr, IProduction, NodeImpl, ParsedResult, ProductionError,
-    StreamPtr, TokenImpl, TokenStream,
+    TokenPtr, TokenImpl, TokenStream,
 };
 
 /// A terminal symbol which matches a given token with the input.
@@ -1192,78 +1192,78 @@ trait ProductionLogger {
     }
     fn log_filtered_result<TN: NodeImpl, TL: TokenImpl>(
         &self,
-        code: &Code,
-        index: FltrPtr,
-        stream: &TokenStream<TL>,
-        result: &ParsedResult<FltrPtr, TN>,
+        _code: &Code,
+        _index: FltrPtr,
+        _stream: &TokenStream<TL>,
+        _result: &ParsedResult<FltrPtr, TN>,
     ) {
         #[cfg(debug_assertions)]
-        match result {
+        match _result {
             Ok(data) => {
-                self.log_success(code, stream[index].start, stream[data.consumed_index].end)
+                self.log_success(_code, _stream[_index].start, _stream[data.consumed_index].end)
             }
-            Err(err) => self.log_error(code, stream[index].start, err),
+            Err(err) => self.log_error(_code, _stream[_index].start, err),
         }
     }
     fn log_lex_result<TN: NodeImpl, TL: TokenImpl>(
         &self,
-        code: &Code,
-        index: StreamPtr,
-        stream: &TokenStream<TL>,
-        result: &ParsedResult<StreamPtr, TN>,
+        _code: &Code,
+        _index: TokenPtr,
+        _stream: &TokenStream<TL>,
+        _result: &ParsedResult<TokenPtr, TN>,
     ) {
         #[cfg(debug_assertions)]
-        match result {
+        match _result {
             Ok(data) => {
-                self.log_success(code, stream[index].start, stream[data.consumed_index].end)
+                self.log_success(_code, _stream[_index].start, _stream[data.consumed_index].end)
             }
-            Err(err) => self.log_error(code, stream[index].start, err),
+            Err(err) => self.log_error(_code, _stream[_index].start, err),
         }
     }
 
     fn log_result<TN: NodeImpl>(
         &self,
-        code: &Code,
-        index: usize,
-        result: &ParsedResult<usize, TN>,
+        _code: &Code,
+        _index: usize,
+        _result: &ParsedResult<usize, TN>,
     ) {
         #[cfg(debug_assertions)]
-        match result {
-            Ok(data) => self.log_success(code, index, data.consumed_index),
-            Err(err) => self.log_error(code, index, err),
+        match _result {
+            Ok(data) => self.log_success(_code, _index, data.consumed_index),
+            Err(err) => self.log_error(_code, _index, err),
         }
     }
-    fn log_success(&self, code: &Code, start: usize, end: usize) {
+    fn log_success(&self, _code: &Code, _start: usize, _end: usize) {
         #[cfg(debug_assertions)]
         if let Some(log_label) = self.get_debugger() {
             if log_label.order() >= Log::Success(()).order() {
                 println!(
                     "Parsing Success for '{}': from {} to {}.",
                     log_label,
-                    code.obtain_position(start),
-                    code.obtain_position(end),
+                    _code.obtain_position(_start),
+                    _code.obtain_position(_end),
                 )
             }
         }
     }
 
-    fn log_error(&self, code: &Code, index: usize, err: &ProductionError) {
+    fn log_error(&self, _code: &Code, _index: usize, _err: &ProductionError) {
         #[cfg(debug_assertions)]
         if let Some(log_label) = self.get_debugger() {
             if log_label.order() >= Log::Result(()).order() {
-                match err {
+                match _err {
                     ProductionError::Unparsed => {
                         println!(
                             "Unparsed production '{}': at {}.",
                             log_label,
-                            code.obtain_position(index),
+                            _code.obtain_position(_index),
                         )
                     }
                     ProductionError::Validation(pointer, message) => {
                         println!(
                             "Validation error '{}': at {}. {}",
                             log_label,
-                            code.obtain_position(*pointer),
+                            _code.obtain_position(*pointer),
                             message
                         )
                     }

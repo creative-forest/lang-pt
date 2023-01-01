@@ -1,9 +1,11 @@
+use crate::production::NTHelper;
+#[cfg(debug_assertions)]
+use crate::production::ProductionLogger;
 use crate::{
-    production::{NTHelper, ProductionLogger, Union},
-    util::Code,
-    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult,
-    ProductionError, SuccessData, TokenImpl, TokenStream,
+    production::Union, util::Code, ASTNode, Cache, FltrPtr, IProduction, ImplementationError,
+    NodeImpl, ParsedResult, ProductionError, SuccessData, TokenImpl, TokenPtr, TokenStream,
 };
+
 use once_cell::unsync::OnceCell;
 use std::fmt::Display;
 use std::{
@@ -75,71 +77,38 @@ impl<TN: NodeImpl, TL: TokenImpl> Union<TN, TL> {
         })
     }
 
-    fn get_result<'s, IT: Iterator<Item = &'s Rc<dyn IProduction<Node = TN, Token = TL>>>>(
-        &'s self,
-        productions: IT,
-        code: &Code,
-        index: FltrPtr,
-        token_stream: &TokenStream<TL>,
-        cache: &mut Cache<FltrPtr, TN>,
-    ) -> ParsedResult<FltrPtr, TN> {
-        for prod in productions {
-            match prod.advance_fltr_ptr(code, index, token_stream, cache) {
-                Ok(s) => {
-                    #[cfg(debug_assertions)]
-                    self.nt_helper.log_success(
-                        code,
-                        token_stream[index].start,
-                        token_stream[s.consumed_index].start,
-                    );
-
-                    return Ok(s);
-                }
-                Err(err) => {
-                    if err.is_invalid() {
-                        #[cfg(debug_assertions)]
-                        self.nt_helper
-                            .log_error(code, token_stream[index].start, &err);
-                        // println!("Returning validation Err:{:?}", err);
-                        return Err(err);
-                    }
-                }
-            }
-        }
-
-        #[cfg(debug_assertions)]
-        self.nt_helper
-            .log_error(code, token_stream[index].start, &ProductionError::Unparsed);
-
-        Err(ProductionError::Unparsed)
-    }
-
     fn obtain_first_set(&self) -> &(bool, Vec<(TL, Vec<usize>)>) {
         self.first_set.get_or_init(|| {
-            let mut children_set: HashMap<TL, HashSet<usize>> = HashMap::new();
+            let mut children_set: HashMap<TL, Vec<usize>> = HashMap::new();
             for (index, prod) in self.get_productions().iter().enumerate() {
                 let mut child_set = HashSet::new();
                 prod.impl_first_set(&mut child_set);
 
                 for t in child_set {
-                    let indexes = children_set.entry(t).or_insert_with(|| HashSet::new());
-                    indexes.insert(index);
+                    let indexes = children_set.entry(t).or_insert_with(|| Vec::new());
+                    indexes.push(index);
                 }
                 if prod.is_nullable() {
                     for (_, v) in &mut children_set {
-                        v.insert(index);
+                        if v.last().unwrap() != &index {
+                            v.push(index);
+                        }
                     }
                     break; // We do not want to visit more production if we find nullable production.
                 }
             }
-            let mut v: Vec<(TL, Vec<usize>)> = children_set
-                .into_iter()
-                .map(|(t, hs)| {
-                    let mut v = hs.into_iter().collect::<Vec<usize>>();
-                    v.sort();
-                    (t, v)
-                })
-                .collect();
+
+            #[cfg(debug_assertions)]
+            for (_, v) in &children_set {
+                let mut s = HashSet::new();
+                for k in v {
+                    if !s.insert(k) {
+                        panic!("Bug! Children set is not unique.")
+                    }
+                }
+            }
+
+            let mut v: Vec<(TL, Vec<usize>)> = children_set.into_iter().collect();
             v.sort_by_key(|(t, _)| *t);
             (v.iter().all(|(t, _)| t.is_structural()), v)
         })
@@ -248,61 +217,103 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Union<TN, TL> {
     fn advance_fltr_ptr(
         &self,
         code: &Code,
-        index: FltrPtr,
+        fltr_ptr: FltrPtr,
         token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<FltrPtr, Self::Node> {
         #[cfg(debug_assertions)]
         self.nt_helper.log_entry();
 
-        let immediate_lex = &token_stream[index];
+        let immediate_lex = &token_stream[fltr_ptr];
 
         let (is_structural, first_sets) = self.obtain_first_set();
 
         let productions = self.get_productions();
 
-        if *is_structural {
-            match first_sets.binary_search_by_key(&immediate_lex.token, |(t, _)| *t) {
-                Ok(p_index) => self.get_result(
-                    first_sets[p_index].1.iter().map(|j| &productions[*j]),
-                    code,
-                    index,
-                    token_stream,
-                    cache,
-                ),
-                Err(_) => {
-                    if self.is_nullable_n_hidden() {
-                        Ok(SuccessData::hidden(index))
-                    } else if self.is_nullable() {
-                        let tree = ASTNode::null(
-                            token_stream[index].start,
-                            Some(token_stream.get_stream_ptr(index)),
-                        );
-                        Ok(SuccessData::tree(index, tree))
-                    } else {
-                        #[cfg(debug_assertions)]
-                        self.nt_helper.log_error(
-                            code,
-                            token_stream[index].start,
-                            &ProductionError::Unparsed,
-                        );
+        let mut production_set_index: Option<usize> = None;
 
-                        Err(ProductionError::Unparsed)
+        match first_sets.binary_search_by_key(&immediate_lex.token, |(t, _)| *t) {
+            Ok(p_index) => {
+                production_set_index = Some(p_index);
+            }
+            Err(_) => {
+                if !is_structural {
+                    let last_token_ptr = if fltr_ptr > FltrPtr::default() {
+                        token_stream.get_stream_ptr(fltr_ptr - 1)
+                    } else {
+                        TokenPtr::default()
+                    };
+
+                    let current_token_ptr = last_token_ptr + 1;
+
+                    let current_token_lex = &token_stream[current_token_ptr];
+
+                    if !current_token_lex.token.is_structural() {
+                        if let Ok(p_i) =
+                            first_sets.binary_search_by_key(&current_token_lex.token, |(t, _)| *t)
+                        {
+                            production_set_index = Some(p_i);
+                        }
                     }
                 }
             }
-        } else {
-            self.get_result(productions.iter(), code, index, token_stream, cache)
         }
+        match production_set_index {
+            Some(p_index) => {
+                for prod in first_sets[p_index].1.iter().map(|j| &productions[*j]) {
+                    match prod.advance_fltr_ptr(code, fltr_ptr, token_stream, cache) {
+                        Ok(s) => {
+                            #[cfg(debug_assertions)]
+                            self.nt_helper.log_success(
+                                code,
+                                token_stream[fltr_ptr].start,
+                                token_stream[s.consumed_index].start,
+                            );
+
+                            return Ok(s);
+                        }
+                        Err(err) => {
+                            if err.is_invalid() {
+                                #[cfg(debug_assertions)]
+                                self.nt_helper
+                                    .log_error(code, token_stream[fltr_ptr].start, &err);
+                                // println!("Returning validation Err:{:?}", err);
+                                return Err(err);
+                            }
+                        }
+                    }
+                }
+            }
+            None => {
+                if self.is_nullable_n_hidden() {
+                    return Ok(SuccessData::hidden(fltr_ptr));
+                } else if self.is_nullable() {
+                    let tree = ASTNode::null(
+                        token_stream[fltr_ptr].start,
+                        Some(token_stream.get_stream_ptr(fltr_ptr)),
+                    );
+                    return Ok(SuccessData::tree(fltr_ptr, tree));
+                }
+            }
+        }
+
+        #[cfg(debug_assertions)]
+        self.nt_helper.log_error(
+            code,
+            token_stream[fltr_ptr].start,
+            &ProductionError::Unparsed,
+        );
+
+        Err(ProductionError::Unparsed)
     }
 
     fn advance_token_ptr(
         &self,
-        code: &crate::util::Code,
-        index: crate::StreamPtr,
-        token_stream: &crate::TokenStream<Self::Token>,
-        cache: &mut Cache<crate::FltrPtr, Self::Node>,
-    ) -> ParsedResult<crate::StreamPtr, Self::Node> {
+        code: &Code,
+        index: TokenPtr,
+        token_stream: &TokenStream<Self::Token>,
+        cache: &mut Cache<FltrPtr, Self::Node>,
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         #[cfg(debug_assertions)]
         self.nt_helper.log_entry();
 

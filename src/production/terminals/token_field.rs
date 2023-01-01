@@ -2,7 +2,7 @@ use crate::{
     production::{ProductionLogger, TokenField, TokenFieldSet},
     util::{Code, Log},
     ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult,
-    ProductionError, StreamPtr, SuccessData, TokenImpl, TokenStream,
+    ProductionError, TokenPtr, SuccessData, TokenImpl, TokenStream,
 };
 use once_cell::unsync::OnceCell;
 use std::{
@@ -104,10 +104,10 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenField<TN, TL> {
     fn advance_token_ptr(
         &self,
         _code: &Code,
-        index: StreamPtr,
+        index: TokenPtr,
         stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         if self.token == stream[index].token {
             cache.update_index(stream[index].end);
 
@@ -303,10 +303,10 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenFieldSet<TN, TL> {
     fn advance_token_ptr(
         &self,
         _code: &Code,
-        index: StreamPtr,
+        index: TokenPtr,
         stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         match self
             .token_set
             .binary_search_by_key(&stream[index].token, |(t, _)| *t)

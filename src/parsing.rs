@@ -3,6 +3,7 @@ use crate::{util::Code, ASTNode, FltrPtr, ITokenization, Lex, NodeImpl, TokenImp
 use std::{
     collections::{HashMap, HashSet},
     rc::Rc,
+    time::Instant,
 };
 
 impl<TN: NodeImpl, TL: TokenImpl> DefaultParser<TN, TL> {
@@ -64,23 +65,28 @@ impl<TN: NodeImpl, TL: TokenImpl> DefaultParser<TN, TL> {
     }
     pub fn parse<'lex>(&self, text: &[u8]) -> Result<Vec<ASTNode<TN>>, ParseError> {
         let code = Code::new(text);
+        let tokenize_instant = Instant::now();
         let lexical_stream = self.tokenize(&code)?;
+        println!("Tokenize time {:?}", tokenize_instant.elapsed());
+        let parser_instant = Instant::now();
         let filtered_stream = TokenStream::from(&lexical_stream);
-        self.parse_stream(&code, filtered_stream)
+        let result = self.parse_stream(&code, filtered_stream);
+        println!("Parsing time {:?}", parser_instant.elapsed());
+        result
+    }
+
+    pub fn add_debug_production<T: IProduction<Node = TN, Token = TL> + 'static>(
+        &mut self,
+        _id: &'static str,
+        _production: &Rc<T>,
+    ) {
+        #[cfg(debug_assertions)]
+        self.debug_production_map.insert(_id, _production.clone());
     }
 }
 
 #[cfg(debug_assertions)]
 impl<TN: NodeImpl, TL: TokenImpl> DefaultParser<TN, TL> {
-    pub fn add_debug_production<T: IProduction<Node = TN, Token = TL> + 'static>(
-        &mut self,
-        id: &'static str,
-        production: &Rc<T>,
-    ) {
-        println!("Adding debug production {}", id);
-        self.debug_production_map.insert(id, production.clone());
-    }
-
     pub fn get_production(&self, id: &str) -> Option<&Rc<dyn IProduction<Node = TN, Token = TL>>> {
         self.debug_production_map.get(id)
     }
@@ -157,20 +163,21 @@ impl<TN: NodeImpl, TL: TokenImpl> LexerlessParser<TN, TL> {
     pub fn validate(&self) -> Result<(), ImplementationError> {
         self.root.validate(HashMap::new(), &mut HashSet::new())
     }
+
+    pub fn add_debug_production<T: IProduction<Node = TN, Token = TL> + 'static>(
+        &mut self,
+        _id: &'static str,
+        _production: &Rc<T>,
+    ) {
+        #[cfg(debug_assertions)]
+        self.debug_production_map.insert(_id, _production.clone());
+    }
 }
 
 #[cfg(debug_assertions)]
 impl<TN: NodeImpl, TL: TokenImpl> LexerlessParser<TN, TL> {
     pub fn get_production(&self, id: &str) -> Option<&Rc<dyn IProduction<Node = TN, Token = TL>>> {
         self.debug_production_map.get(id)
-    }
-
-    pub fn add_debug_production<T: IProduction<Node = TN, Token = TL> + 'static>(
-        &mut self,
-        id: &'static str,
-        production: &Rc<T>,
-    ) {
-        self.debug_production_map.insert(id, production.clone());
     }
 
     #[cfg(debug_assertions)]

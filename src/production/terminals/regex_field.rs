@@ -11,7 +11,7 @@ use crate::{
     production::{ProductionLogger, RegexField},
     util::Code,
     ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult,
-    ProductionError, StreamPtr, SuccessData, TokenImpl, TokenStream,
+    ProductionError, TokenPtr, SuccessData, TokenImpl, TokenStream,
 };
 
 impl<TN: NodeImpl> RegexField<TN, i8> {
@@ -84,10 +84,10 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for RegexField<TN, TL> {
     fn advance_token_ptr(
         &self,
         _: &Code,
-        _: StreamPtr,
+        _: TokenPtr,
         _: &TokenStream<Self::Token>,
         _: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         panic!("Bug! RegexTerminal should not used for tokenized parsing.")
     }
 

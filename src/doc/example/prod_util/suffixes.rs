@@ -28,7 +28,7 @@ fn suffixes_test() {
     let id = Rc::new(RegexField::new(r#"^[_$a-zA-Z][_$\w]*"#, Some(NodeValue::ID)).unwrap());
     let number = Rc::new(
         RegexField::new(
-            r"^(0|[\d--0]\d*)(\.\d+)?([eE][+-]?\d+)?",
+            r"^(?:0|[\d--0]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?",
             Some(NodeValue::Number),
         )
         .unwrap(),

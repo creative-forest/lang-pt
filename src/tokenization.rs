@@ -56,6 +56,7 @@ impl<TToken: TokenImpl, TState: Copy + Debug + Ord + Eq> ITokenization
             Err(_) => panic!("TokenizationState '{:?}' is not implemented", current_state),
         };
 
+        #[cfg(debug_assertions)]
         let debug = self.debug.get().map_or(Log::None, |s| s.clone());
 
         #[cfg(debug_assertions)]

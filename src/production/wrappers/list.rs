@@ -1,7 +1,7 @@
 use crate::{
     production::{List, ProductionLogger},
     util::Code,
-    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, StreamPtr,
+    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, TokenPtr,
     SuccessData, TokenStream,
 };
 use once_cell::unsync::OnceCell;
@@ -127,10 +127,10 @@ impl<TP: IProduction> IProduction for List<TP> {
     fn advance_token_ptr(
         &self,
         code: &Code,
-        index: StreamPtr,
+        index: TokenPtr,
         token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         #[cfg(debug_assertions)]
         self.log_entry();
         let result = self.consume(index, cache, |moved_pointer, cache| {

@@ -2,7 +2,7 @@ use crate::{
     production::{ProductionLogger, PunctuationsField},
     util::Code,
     ASTNode, Cache, FieldTree, FltrPtr, IProduction, NodeImpl, ParsedResult, ProductionError,
-    StreamPtr, SuccessData, TokenImpl, TokenStream,
+    TokenPtr, SuccessData, TokenImpl, TokenStream,
 };
 use once_cell::unsync::OnceCell;
 use std::{
@@ -102,10 +102,10 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for PunctuationsField<TN, TL> {
     fn advance_token_ptr(
         &self,
         _: &Code,
-        _: StreamPtr,
+        _: TokenPtr,
         _: &TokenStream<Self::Token>,
         _: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         panic!("Bug! ConstListTerminal should not used for tokenized parsing.")
     }
 

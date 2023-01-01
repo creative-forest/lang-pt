@@ -2,7 +2,7 @@ use crate::{
     production::{EOFProd, ProductionLogger},
     util::Code,
     ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult,
-    ProductionError, StreamPtr, SuccessData, TokenImpl, TokenStream,
+    ProductionError, TokenPtr, SuccessData, TokenImpl, TokenStream,
 };
 use once_cell::unsync::OnceCell;
 use std::{
@@ -111,10 +111,10 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for EOFProd<TN, TL> {
     fn advance_token_ptr(
         &self,
         code: &Code,
-        index: StreamPtr,
+        index: TokenPtr,
         stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         #[cfg(debug_assertions)]
         self.log_entry();
 

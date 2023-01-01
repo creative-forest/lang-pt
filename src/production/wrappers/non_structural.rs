@@ -1,6 +1,6 @@
 use crate::production::ProductionLogger;
 use crate::{production::NonStructural, util::Code, Cache, FltrPtr, IProduction, TokenStream};
-use crate::{ImplementationError, ParsedResult, ProductionError, StreamPtr, SuccessData};
+use crate::{ImplementationError, ParsedResult, ProductionError, TokenPtr, SuccessData};
 use once_cell::unsync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
@@ -90,17 +90,17 @@ impl<TProd: IProduction> IProduction for NonStructural<TProd> {
     fn advance_fltr_ptr(
         &self,
         code: &Code,
-        index: FltrPtr,
+        fltr_ptr: FltrPtr,
         token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<FltrPtr, Self::Node> {
         #[cfg(debug_assertions)]
         self.log_entry();
 
-        let start_segment = if index > FltrPtr::default() {
-            token_stream.get_stream_ptr(index - 1)
+        let start_segment = if fltr_ptr > FltrPtr::default() {
+            token_stream.get_stream_ptr(fltr_ptr - 1)
         } else {
-            StreamPtr::default()
+            TokenPtr::default()
         };
 
         let parsed_data =
@@ -108,18 +108,18 @@ impl<TProd: IProduction> IProduction for NonStructural<TProd> {
                 .advance_token_ptr(code, start_segment + 1, token_stream, cache)?;
 
         let result = if self.fill_range {
-            let end_segment = token_stream.get_stream_ptr(index);
+            let end_segment = token_stream.get_stream_ptr(fltr_ptr);
             if end_segment == parsed_data.consumed_index {
-                Ok(SuccessData::new(index, parsed_data.children))
+                Ok(SuccessData::new(fltr_ptr, parsed_data.children))
             } else {
                 Err(ProductionError::Unparsed)
             }
         } else {
-            Ok(SuccessData::new(index, parsed_data.children))
+            Ok(SuccessData::new(fltr_ptr, parsed_data.children))
         };
 
         #[cfg(debug_assertions)]
-        self.log_filtered_result(code, index, token_stream, &result);
+        self.log_filtered_result(code, fltr_ptr, token_stream, &result);
 
         result
     }
@@ -127,10 +127,10 @@ impl<TProd: IProduction> IProduction for NonStructural<TProd> {
     fn advance_token_ptr(
         &self,
         code: &Code,
-        index: StreamPtr,
+        index: TokenPtr,
         stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         self.get_symbol()
             .advance_token_ptr(code, index, stream, cache)
     }

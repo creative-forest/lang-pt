@@ -1,7 +1,7 @@
 use crate::{
     production::{Lookahead, ProductionLogger},
     util::Code,
-    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, StreamPtr,
+    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, TokenPtr,
     SuccessData, TokenStream,
 };
 use once_cell::unsync::OnceCell;
@@ -129,10 +129,10 @@ impl<TProd: IProduction> IProduction for Lookahead<TProd> {
     fn advance_token_ptr(
         &self,
         code: &Code,
-        index: StreamPtr,
+        index: TokenPtr,
         token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         let result = self
             .get_production()
             .advance_token_ptr(code, index, token_stream, cache)

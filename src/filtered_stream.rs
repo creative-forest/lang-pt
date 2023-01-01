@@ -1,8 +1,8 @@
-use crate::{ASTNode, FltrPtr, Lex, NodeImpl, StreamPtr, SuccessData, TokenImpl, TokenStream};
+use crate::{ASTNode, FltrPtr, Lex, NodeImpl, TokenPtr, SuccessData, TokenImpl, TokenStream};
 use std::ops::Index;
 
 impl<'lex, TNode> TokenStream<'lex, TNode> {
-    pub fn new(original_stream: &'lex Vec<Lex<TNode>>, filtered_stream: Vec<StreamPtr>) -> Self {
+    pub fn new(original_stream: &'lex Vec<Lex<TNode>>, filtered_stream: Vec<TokenPtr>) -> Self {
         Self {
             original_stream,
             filtered_stream,
@@ -11,12 +11,12 @@ impl<'lex, TNode> TokenStream<'lex, TNode> {
 }
 impl<'lex, TNode: TokenImpl> From<&'lex Vec<Lex<TNode>>> for TokenStream<'lex, TNode> {
     fn from(segments: &'lex Vec<Lex<TNode>>) -> Self {
-        let filtered_indices: Vec<StreamPtr> = segments
+        let filtered_indices: Vec<TokenPtr> = segments
             .iter()
             .enumerate()
             .filter_map(|(j, data)| {
                 if data.token.is_structural() {
-                    Some(StreamPtr(j))
+                    Some(TokenPtr(j))
                 } else {
                     None
                 }
@@ -30,7 +30,7 @@ impl<'lex, TToken: TokenImpl> TokenStream<'lex, TToken> {
     pub fn is_eos(&self, index: FltrPtr) -> bool {
         self[index].token == TToken::eof()
     }
-    pub fn is_eos_segment(&self, index: StreamPtr) -> bool {
+    pub fn is_eos_segment(&self, index: TokenPtr) -> bool {
         self[index].token == TToken::eof()
     }
 }
@@ -63,7 +63,7 @@ impl<'lex, TToken> TokenStream<'lex, TToken> {
             Err(s) => Err(FltrPtr(s)),
         }
     }
-    pub fn find_filtered_index(&self, index: &StreamPtr) -> Result<FltrPtr, FltrPtr> {
+    pub fn find_filtered_index(&self, index: &TokenPtr) -> Result<FltrPtr, FltrPtr> {
         match self.filtered_stream.binary_search(index) {
             Ok(s) => Ok(FltrPtr(s)),
             Err(s) => Err(FltrPtr(s)),
@@ -141,10 +141,10 @@ impl<'lex, TToken> TokenStream<'lex, TToken> {
             .collect()
     }
 
-    pub fn get_stream_ptr(&self, index: FltrPtr) -> StreamPtr {
+    pub fn get_stream_ptr(&self, index: FltrPtr) -> TokenPtr {
         self.filtered_stream[index.0]
     }
-    pub fn last_segment_index(&self, lex_index: &FltrPtr) -> Option<StreamPtr> {
+    pub fn last_segment_index(&self, lex_index: &FltrPtr) -> Option<TokenPtr> {
         if lex_index.0 > 0 {
             Some(self.filtered_stream[lex_index.0 - 1])
         } else {
@@ -167,10 +167,10 @@ impl<'lex, TNode> Index<FltrPtr> for TokenStream<'lex, TNode> {
     }
 }
 
-impl<'lex, TNode> Index<StreamPtr> for TokenStream<'lex, TNode> {
+impl<'lex, TNode> Index<TokenPtr> for TokenStream<'lex, TNode> {
     type Output = Lex<TNode>;
 
-    fn index(&self, index: StreamPtr) -> &Self::Output {
+    fn index(&self, index: TokenPtr) -> &Self::Output {
         debug_assert!(
             index.0 < self.original_stream.len(),
             "Trying to access index '{:?}' from lex stream length '{}'",

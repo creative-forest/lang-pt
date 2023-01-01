@@ -158,16 +158,16 @@ trait LexemeLogger {
             None => self.log_failure(_pointer, _code),
         }
     }
-    fn log_success<T: Debug>(&self, code: &Code, lex: &Lex<T>) {
+    fn log_success<T: Debug>(&self, _code: &Code, _lex: &Lex<T>) {
         #[cfg(debug_assertions)]
         if let Some(log_label) = self.log_cell().get() {
             if log_label.order() >= Log::Success(()).order() {
                 println!(
                     "Lexeme Success for {} : token: {:?} from {} to {}.",
                     log_label,
-                    lex.token,
-                    code.obtain_position(lex.start),
-                    code.obtain_position(lex.end)
+                    _lex.token,
+                    _code.obtain_position(_lex.start),
+                    _code.obtain_position(_lex.end)
                 )
             }
         }

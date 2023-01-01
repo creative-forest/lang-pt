@@ -1,7 +1,7 @@
 use crate::{
     production::{Cacheable, ProductionLogger},
     util::Code,
-    Cache, CacheKey, FltrPtr, IProduction, ImplementationError, ParsedResult, StreamPtr,
+    Cache, CacheKey, FltrPtr, IProduction, ImplementationError, ParsedResult, TokenPtr,
     TokenStream,
 };
 use once_cell::unsync::OnceCell;
@@ -110,10 +110,10 @@ impl<TProd: IProduction> IProduction for Cacheable<TProd> {
     fn advance_token_ptr(
         &self,
         code: &Code,
-        lexical_index: StreamPtr,
+        lexical_index: TokenPtr,
         token_stream: &TokenStream<Self::Token>,
         memory_cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         if cfg!(debug_assertions) {
             panic!("Cacheability is not implemented for Non-structural production. Remove Cacheable wrapper for {} production",self.get_production());
         } else {

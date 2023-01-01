@@ -234,13 +234,13 @@ pub trait NodeImpl: Debug + Clone {
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 /// A wrapper to indicate the indices of the tokenized data in the [TokenStream].
-pub struct StreamPtr(usize);
+pub struct TokenPtr(usize);
 
 #[derive(Clone)]
 /// Abstract Syntax tree (AST) of the parsed input.
 pub struct ASTNode<TNode> {
     pub node: TNode,
-    pub bound: Option<(StreamPtr, StreamPtr)>, // Start and end position information of the lexical stream generated from the tokenizer.
+    pub bound: Option<(TokenPtr, TokenPtr)>, // Start and end position information of the lexical stream generated from the tokenizer.
     pub start: usize, // Actual starting position of the parsed utf-8 slice. This is different from the starting position of the parsed string.
     pub end: usize, // Actual end point of the parsed utf-8 slice. This is different from the end of the parsed string.
     pub children: Vec<ASTNode<TNode>>, // Children of the abstract syntax tree
@@ -337,7 +337,7 @@ pub struct ParseError {
 #[derive(Debug, Clone)]
 /// A wrapper implementation of the tokenized data.
 pub struct TokenStream<'lex, TNode> {
-    filtered_stream: Vec<StreamPtr>,
+    filtered_stream: Vec<TokenPtr>,
     original_stream: &'lex Vec<Lex<TNode>>,
 }
 
@@ -402,10 +402,10 @@ pub trait IProduction: Display {
     fn advance_token_ptr(
         &self,
         code: &Code,
-        index: StreamPtr,
+        index: TokenPtr,
         token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node>;
+    ) -> ParsedResult<TokenPtr, Self::Node>;
 
     fn advance_ptr(
         &self,
@@ -426,12 +426,14 @@ pub trait IProduction: Display {
 pub struct DefaultParser<TN: NodeImpl = u8, TL: TokenImpl = i8> {
     tokenizer: Rc<dyn ITokenization<Token = TL>>,
     root: Rc<dyn IProduction<Node = TN, Token = TL>>,
+    #[cfg(debug_assertions)]
     debug_production_map: HashMap<&'static str, Rc<dyn IProduction<Node = TN, Token = TL>>>,
 }
 
 /// A parser structure for parsing input without a tokenizer.
 pub struct LexerlessParser<TN: NodeImpl = u8, TL: TokenImpl = i8> {
     root: Rc<dyn IProduction<Node = TN, Token = TL>>,
+    #[cfg(debug_assertions)]
     debug_production_map: HashMap<&'static str, Rc<dyn IProduction<Node = TN, Token = TL>>>,
 }
 

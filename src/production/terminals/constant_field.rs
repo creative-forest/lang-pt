@@ -1,7 +1,7 @@
 use crate::{
     production::{ConstantField, ConstantFieldSet, ProductionLogger},
     util::Code,
-    ASTNode, Cache, FltrPtr, IProduction, NodeImpl, ParsedResult, ProductionError, StreamPtr,
+    ASTNode, Cache, FltrPtr, IProduction, NodeImpl, ParsedResult, ProductionError, TokenPtr,
     SuccessData, TokenImpl, TokenStream,
 };
 use once_cell::unsync::OnceCell;
@@ -78,10 +78,10 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for ConstantField<TN, TL> {
     fn advance_token_ptr(
         &self,
         _: &Code,
-        _: StreamPtr,
+        _: TokenPtr,
         _: &TokenStream<Self::Token>,
         _: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         panic!("Bug! ConstTerminal should not used with tokenized parsing.")
     }
 
@@ -226,10 +226,10 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for ConstantFieldSet<TN, TL> {
     fn advance_token_ptr(
         &self,
         _: &Code,
-        _: StreamPtr,
+        _: TokenPtr,
         _: &TokenStream<Self::Token>,
         _: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         panic!("Bug! ConstListTerminal should not used for tokenized parsing.")
     }
 

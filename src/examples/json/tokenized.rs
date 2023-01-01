@@ -169,7 +169,7 @@ pub fn json_grammar() -> DefaultParser<JSONNode, JSONToken> {
 
     let parser = DefaultParser::new(Rc::new(lexer), main_node).unwrap();
 
-    if cfg!(test) {
+    if cfg!(debug_assertions) {
         let mut mut_parser = parser;
 
         mut_parser.add_debug_production("object", &json_object_node);

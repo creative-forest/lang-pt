@@ -1,7 +1,7 @@
 use crate::{
     production::{Nullable, ProductionLogger},
     util::Code,
-    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, StreamPtr,
+    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, TokenPtr,
     SuccessData, TokenStream,
 };
 use once_cell::unsync::OnceCell;
@@ -112,10 +112,10 @@ impl<TProd: IProduction> IProduction for Nullable<TProd> {
     fn advance_token_ptr(
         &self,
         code: &Code,
-        index: StreamPtr,
+        index: TokenPtr,
         stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, Self::Node> {
+    ) -> ParsedResult<TokenPtr, Self::Node> {
         match self
             .get_production()
             .advance_token_ptr(code, index, stream, cache)

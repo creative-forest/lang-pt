@@ -1,22 +1,22 @@
-use crate::{StreamPtr, FltrPtr};
+use crate::{TokenPtr, FltrPtr};
 use std::{
     fmt::Display,
     ops::{Add, Sub},
 };
 
-impl Default for StreamPtr {
+impl Default for TokenPtr {
     fn default() -> Self {
         Self(0)
     }
 }
 
-impl Display for StreamPtr {
+impl Display for TokenPtr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl StreamPtr {
+impl TokenPtr {
     fn new(index: usize) -> Self {
         Self(index)
     }
@@ -33,24 +33,24 @@ impl StreamPtr {
     }
 }
 
-impl From<usize> for StreamPtr {
+impl From<usize> for TokenPtr {
     fn from(us: usize) -> Self {
-        StreamPtr(us)
+        TokenPtr(us)
     }
 }
 
-impl Add<usize> for StreamPtr {
+impl Add<usize> for TokenPtr {
     type Output = Self;
 
     fn add(self, rhs: usize) -> Self::Output {
         Self::new(self.0 + rhs)
     }
 }
-impl Sub<usize> for StreamPtr {
+impl Sub<usize> for TokenPtr {
     type Output = Self;
 
     fn sub(self, rhs: usize) -> Self::Output {
-        StreamPtr::new(self.0 - rhs)
+        TokenPtr::new(self.0 - rhs)
     }
 }
 

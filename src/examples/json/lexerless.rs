@@ -162,7 +162,7 @@ pub fn json_lexerless_grammar() -> LexerlessParser<JSONNode> {
 
     let parser = LexerlessParser::new(main_node).unwrap();
 
-    if cfg!(test) {
+    if cfg!(debug_assertions) {
         let mut mut_parser = parser;
 
         mut_parser.add_debug_production("object", &json_object_node);

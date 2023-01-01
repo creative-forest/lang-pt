@@ -1,7 +1,7 @@
 use crate::production::ProductionLogger;
 use crate::{
     production::SeparatedList, util::Code, Cache, FltrPtr, IProduction, ImplementationError,
-    ParsedResult, StreamPtr, SuccessData, TokenStream,
+    ParsedResult, TokenPtr, SuccessData, TokenStream,
 };
 use once_cell::unsync::OnceCell;
 use std::hash::Hash;
@@ -189,10 +189,10 @@ impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> IProd
     fn advance_token_ptr(
         &self,
         code: &Code,
-        index: StreamPtr,
+        index: TokenPtr,
         token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
-    ) -> ParsedResult<StreamPtr, TP::Node> {
+    ) -> ParsedResult<TokenPtr, TP::Node> {
         #[cfg(debug_assertions)]
         self.log_entry();
         let result = self.consume(

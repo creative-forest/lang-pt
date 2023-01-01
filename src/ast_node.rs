@@ -1,4 +1,4 @@
-use crate::{ASTNode, NodeImpl, StreamPtr};
+use crate::{ASTNode, NodeImpl, TokenPtr};
 use ptree::TreeItem;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -31,7 +31,7 @@ impl<TNode> ASTNode<TNode> {
         node: TNode,
         start: usize,
         end: usize,
-        bound: Option<(StreamPtr, StreamPtr)>,
+        bound: Option<(TokenPtr, TokenPtr)>,
         children: Vec<ASTNode<TNode>>,
     ) -> Self {
         Self {
@@ -47,14 +47,14 @@ impl<TNode> ASTNode<TNode> {
         node: TNode,
         start: usize,
         end: usize,
-        bound: Option<(StreamPtr, StreamPtr)>,
+        bound: Option<(TokenPtr, TokenPtr)>,
     ) -> Self {
         ASTNode::new(node, start, end, bound, Vec::with_capacity(0))
     }
 }
 impl<TNode: NodeImpl> ASTNode<TNode> {
     /// Create AST of a null production
-    pub fn null(pointer: usize, seg_index: Option<StreamPtr>) -> Self {
+    pub fn null(pointer: usize, seg_index: Option<TokenPtr>) -> Self {
         ASTNode::new(
             TNode::null(),
             pointer,

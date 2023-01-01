@@ -204,7 +204,10 @@ fn non_structural_test() {
 
     let parser = DefaultParser::new(Rc::new(tokenizer()), root).unwrap();
 
-    let code = "let ax:number\nlet ax:string";
+    let code = "
+    let ax:number
+    let ax:string
+    ";
 
     let tree_node = parser.parse(code.as_bytes()).unwrap();
     tree_node[0].print().unwrap();
