@@ -1,6 +1,5 @@
 //! A module consist of production utilities which are helper utilities to write grammar for the parser.
 //!
-//!
 //! Each production utility represent a defined rule of operation for a set symbols.
 //! As an example, non terminal production utility [Concat], represents concatenation associated symbols,
 //! where as, [Union], will use the first production match from the set of alternative symbols.
@@ -24,7 +23,7 @@ mod __tests__;
 use crate::{
     util::{Code, Log},
     ASTNode, CacheKey, FieldTree, FltrPtr, IProduction, NodeImpl, ParsedResult, ProductionError,
-    TokenPtr, TokenImpl, TokenStream,
+    TokenImpl, TokenPtr, TokenStream,
 };
 
 /// A terminal symbol which matches a given token with the input.
@@ -42,6 +41,8 @@ pub struct TokenFieldSet<TN: NodeImpl = u8, TL: TokenImpl = i8> {
 }
 
 /// A terminal symbol which matches the provided regex expression with the input.
+///
+/// This symbol can be used while using a lexerless parsing.
 pub struct RegexField<TN: NodeImpl = u8, TT = i8> {
     regexp: Regex,
     node_value: Option<TN>,
@@ -51,6 +52,8 @@ pub struct RegexField<TN: NodeImpl = u8, TT = i8> {
 }
 
 /// A terminal symbol which matches the provided value with the input.
+///
+/// This symbol can be used while using a lexerless parsing.
 pub struct ConstantField<TN: NodeImpl = u8, TT = i8> {
     value: Vec<u8>,
     node_value: Option<TN>,
@@ -59,6 +62,8 @@ pub struct ConstantField<TN: NodeImpl = u8, TT = i8> {
 }
 
 /// A terminal symbol which matches a set of punctuation field with the input.
+///
+/// This symbol can be used while using a lexerless parsing.
 pub struct PunctuationsField<TN: NodeImpl = u8, TT = i8> {
     tree: FieldTree<Option<TN>>,
     rule_name: OnceCell<&'static str>,
@@ -68,7 +73,8 @@ pub struct PunctuationsField<TN: NodeImpl = u8, TT = i8> {
 }
 
 /// A terminal symbol which matches a set of string values with the input.
-
+///
+/// This symbol can be used while using a lexerless parsing.
 pub struct ConstantFieldSet<TN: NodeImpl = u8, TT = i8> {
     fields: Vec<(Vec<u8>, Option<TN>)>,
     rule_name: OnceCell<&'static str>,
@@ -1199,9 +1205,11 @@ trait ProductionLogger {
     ) {
         #[cfg(debug_assertions)]
         match _result {
-            Ok(data) => {
-                self.log_success(_code, _stream[_index].start, _stream[data.consumed_index].end)
-            }
+            Ok(data) => self.log_success(
+                _code,
+                _stream[_index].start,
+                _stream[data.consumed_index].end,
+            ),
             Err(err) => self.log_error(_code, _stream[_index].start, err),
         }
     }
@@ -1214,9 +1222,11 @@ trait ProductionLogger {
     ) {
         #[cfg(debug_assertions)]
         match _result {
-            Ok(data) => {
-                self.log_success(_code, _stream[_index].start, _stream[data.consumed_index].end)
-            }
+            Ok(data) => self.log_success(
+                _code,
+                _stream[_index].start,
+                _stream[data.consumed_index].end,
+            ),
             Err(err) => self.log_error(_code, _stream[_index].start, err),
         }
     }

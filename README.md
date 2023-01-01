@@ -392,7 +392,7 @@ let value = Rc::new(Union::new(
     vec![number, identifier, paren_expr.clone()],
 ));
 
-let product = Rc::new(SeparatedList::new(&value, &mul_ops, true)); // The separated should be inclusive i.e. operators should not be at the end of production.
+let product = Rc::new(SeparatedList::new(&value, &mul_ops, true)); // The separator should be inclusive i.e. operators should not be at the end of production.
 
 let sum = Rc::new(SeparatedList::new(&product, &add_ops, false));
 
@@ -544,8 +544,8 @@ let expr_part = Rc::new(Suffixes::new(
     &cmp_expr_node,
     true,
     vec![
-        (truthy_expr_part.clone(), Some(NodeValue::Truthy)),
-        (instance_of_expr_part, Some(NodeValue::InstanceOfExpr)),
+        (truthy_expr_part.clone(), NodeValue::Truthy),
+        (instance_of_expr_part, NodeValue::InstanceOfExpr),
     ],
 ));
 

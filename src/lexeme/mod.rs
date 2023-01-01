@@ -13,26 +13,7 @@
 //!
 //! We need to create token types which will be returned alongside the tokenized data.
 //! The token type should implement [TokenImpl](crate::TokenImpl) to be used by the [Tokenizer](crate::Tokenizer).
-//! Custom implementation for [TokenImpl](crate::TokenImpl) trait has been added to primitive types [i8], [i16], and [isize] as given below.
-//!
-//! ```rust,no_run
-//! use lang_pt::TokenImpl;
-//!
-//! impl TokenImpl for i8 {
-//!     fn eof() -> Self { Self::MAX }
-//!     fn is_structural(&self) -> bool { *self >= 0 }
-//! }
-//!
-//! impl TokenImpl for isize {
-//!     fn eof() -> Self { Self::MAX }
-//!     fn is_structural(&self) -> bool { *self >= 0 }
-//! }
-//!
-//! impl TokenImpl for i16 {
-//!     fn eof() -> Self { Self::MAX }
-//!     fn is_structural(&self) -> bool { *self >= 0 }
-//! }
-//! ```
+//! Custom implementation for [TokenImpl](crate::TokenImpl) trait has been added to primitive types [i8], [i16], and [isize].
 //!
 //! However, we will be implementing custom types to return as a stream of tokens.
 //!
@@ -590,7 +571,7 @@ pub struct Middleware<TLexeme: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TLexeme:
 /// let identifier = Rc::new(Pattern::new(Token::ID, r#"^[_$a-zA-Z][_$\w]*"#).unwrap());
 /// let number_literal =
 ///     Rc::new(Pattern::new(Token::Number, r"^(0|[\d--0]\d*)(\.\d+)?([eE][+-]?\d+)?").unwrap());
-/// 
+///
 /// let expression_punctuation = Punctuations::new(vec![
 ///     ("+", Token::Add),
 ///     ("-", Token::Subtract),
@@ -600,7 +581,7 @@ pub struct Middleware<TLexeme: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TLexeme:
 ///     ("`", Token::TemplateTick),
 /// ])
 /// .unwrap();
-/// 
+///
 /// let expr_punctuation_mixin = Rc::new(StateMixin::new(
 ///     expression_punctuation,
 ///     vec![
@@ -610,7 +591,7 @@ pub struct Middleware<TLexeme: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TLexeme:
 ///         (Token::CloseBrace, Action::remove(false)),
 ///     ],
 /// ));
-/// 
+///
 /// let lex_template_string: Rc<Pattern<Token>> = Rc::new(
 ///     Pattern::new(
 ///         Token::TemplateString,
@@ -618,7 +599,7 @@ pub struct Middleware<TLexeme: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TLexeme:
 ///     )
 ///     .unwrap(),
 /// );
-/// 
+///
 /// let template_punctuations = Punctuations::new(vec![
 ///     ("`", Token::TemplateTick),
 ///     ("${", Token::TemplateExprStart),
@@ -631,7 +612,7 @@ pub struct Middleware<TLexeme: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TLexeme:
 ///         (Token::TemplateExprStart, Action::append(MAIN, false)),
 ///     ],
 /// );
-/// 
+///
 /// let mut combined_tokenizer = CombinedTokenizer::new(
 ///     MAIN,
 ///     vec![identifier, number_literal, expr_punctuation_mixin],
@@ -640,7 +621,7 @@ pub struct Middleware<TLexeme: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TLexeme:
 ///     TEMPLATE,
 ///     vec![Rc::new(template_punctuation_mixin), lex_template_string],
 /// );
-/// 
+///
 /// let token_stream = combined_tokenizer
 ///     .tokenize(&Code::from("d=`Sum is ${a+b}`"))
 ///     .unwrap();
@@ -660,7 +641,7 @@ pub struct Middleware<TLexeme: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TLexeme:
 ///         Lex::new(Token::EOF, 17, 17),
 ///     ]
 /// );
-/// 
+///
 /// ```
 
 pub struct StateMixin<TLexeme: ILexeme> {
@@ -699,7 +680,7 @@ pub struct StateMixin<TLexeme: ILexeme> {
 /// let identifier = Rc::new(Pattern::new(Token::ID, r#"^[_$a-zA-Z][_$\w]*"#).unwrap());
 /// let number_literal =
 ///     Rc::new(Pattern::new(Token::Number, r"^(0|[\d--0]\d*)(\.\d+)?([eE][+-]?\d+)?").unwrap());
-/// 
+///
 /// let punctuations = Punctuations::new(vec![
 ///     ("+", Token::Add),
 ///     ("*", Token::Mul),
@@ -708,7 +689,7 @@ pub struct StateMixin<TLexeme: ILexeme> {
 ///     ("-", Token::Subtract),
 /// ])
 /// .unwrap();
-/// 
+///
 /// let punctuation_mixin = Rc::new(ThunkStateMixin::new(
 ///     punctuations,
 ///     |lex_data, _code, stream| {
@@ -729,17 +710,17 @@ pub struct StateMixin<TLexeme: ILexeme> {
 ///         }
 ///     },
 /// ));
-/// 
+///
 /// let regex_literal =
 ///     Rc::new(Pattern::new(Token::RegexLiteral, r"^/([^\\/\r\n\[]|\\.|\[[^]]+\])+/").unwrap());
-/// 
+///
 /// let tokenizer = Tokenizer::new(vec![
 ///     identifier,
 ///     number_literal,
 ///     punctuation_mixin,
 ///     regex_literal, // Should appear after punctuation so that it will be checked once div '/' is rejected.
 /// ]);
-/// 
+///
 /// let lex = tokenizer.tokenize(&Code::from("2/xy/6")).unwrap();
 /// assert_eq!(
 ///     lex,
