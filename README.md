@@ -6,6 +6,12 @@ A language parser tool to generate recursive descent top down parser.
 
 Parsers written for the languages like Javascript are often custom handwritten due to the complexity of the languages. However, writing custom parser code often increases development and maintenance costs for the parser. With an intention to reduce development efforts, the library has been created for building a parser for a high-level language (HLL). The goal for this library is to develop a flexible library to support a wide range of grammar keeping a fair performance in comparison to a custom-written parser.
 
+# Design
+
+A language parser is usually developed either by writing custom code by hand or using a parser generator tool. While building a parser using a parser generator, grammar for the language is implemented in a Domain Specific Language (DSL) specified by the generator tool. The generator will then compile the grammar and generate a parser code in the target runtime language. However, this parser library uses a set of production utilities to implement grammar in the rust programming language. Therefore, instead of writing grammar in the generator-specified language, one can make use of utilities like Concat, Union, etc. to implement concatenation and alternative production of symbols.
+
+This parsing tool is also equipped with utilities like Lookahead, Validator, and  NonStructural to support custom validation, precedence-based parsing, etc. This parsing library can be used to parse a wide range of languages which often require custom functionality to be injected into the grammar. Moreover, the library also includes production utilities like SeparatedList, and Suffixes, to ease writing grammar for a language.
+
 # Usage
 
 We will walk through an example implementation of Javascript expressions to describe the steps to generate the parser.
