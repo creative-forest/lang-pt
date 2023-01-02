@@ -400,7 +400,7 @@ let value = Rc::new(Union::new(
 
 let product = Rc::new(SeparatedList::new(&value, &mul_ops, true)); // The separator should be inclusive i.e. operators should not be at the end of production.
 
-let sum = Rc::new(SeparatedList::new(&product, &add_ops, false));
+let sum = Rc::new(SeparatedList::new(&product, &add_ops, true));
 
 let semicolon = Rc::new(TokenField::new(Token::Semicolon, None));
 
@@ -458,7 +458,7 @@ enum NodeValue {
 ...
 let product = Rc::new(SeparatedList::new(&value, &mul_ops, true)); // The separated should be inclusive i.e. operators should not be at the end of production.
 let product_node = Rc::new(Node::new(&product, NodeValue::Product));
-let sum = Rc::new(SeparatedList::new(&product_node, &add_ops, false));
+let sum = Rc::new(SeparatedList::new(&product_node, &add_ops, true));
 let sum_node = Rc::new(Node::new(&sum, NodeValue::Sum));
 let semicolon = Rc::new(TokenField::new(Token::Semicolon, None));
 let expression = Rc::new(Concat::new("expression", vec![sum_node.clone(), semicolon]));
