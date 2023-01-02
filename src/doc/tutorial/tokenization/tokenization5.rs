@@ -1,7 +1,7 @@
 use crate::lexeme::{Action, Mapper, Middleware, Pattern, Punctuations, StateMixin};
-use crate::{Code, Log};
 use crate::Lex;
 use crate::TokenImpl;
+use crate::{Code, Log};
 use crate::{CombinedTokenizer, ITokenization};
 use std::rc::Rc;
 
@@ -178,6 +178,9 @@ fn tokenizer() {
             Rc::new(expression_punctuations_mixin),
         ],
     );
+    combined_tokenizer
+        .set_log(Log::Default("combined-tokenizer"))
+        .unwrap();
 
     combined_tokenizer.add_state(
         TEMPLATE,

@@ -644,15 +644,15 @@ combined_tokenizer.set_log(Log::Default("combined-tokenizer")).unwrap();
 let token_stream = combined_tokenized.tokenize(b"`Sum is ${a+b-c}`").unwrap();
 // Logs
 /*
-    Switching state 0 -> 1
+    combined-tokenizer : Switching state 0 -> 1 at  { line: 1, column: 2 }
     Entering template-string
-    Lexeme Success for template-string : token: TemplateString from  { line: 1, column: 1 } to  { line: 1, column: 8 }.
+    Lexeme Success for template-string : token: TemplateString from  { line: 1, column: 2 } to  { line: 1, column: 9 }.
     Entering template-string
-    Lexeme error for template-string : at  { line: 1, column: 8 }
-    Switching state 1 -> 0
-    Switching state 0 -> 1
+    Lexeme error for template-string : at  { line: 1, column: 9 }
+    combined-tokenizer : Switching state 1 -> 0 at  { line: 1, column: 11 }
+    combined-tokenizer : Switching state 0 -> 1 at  { line: 1, column: 17 }
     Entering template-string
-    Lexeme error for template-string : at  { line: 1, column: 16 }
+    Lexeme error for template-string : at  { line: 1, column: 17 }
 */
 ...
 ```

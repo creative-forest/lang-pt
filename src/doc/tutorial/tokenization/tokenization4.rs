@@ -1,5 +1,5 @@
 use crate::lexeme::{Action, Mapper, Middleware, Pattern, Punctuations, StateMixin};
-use crate::Code;
+use crate::{Code, Log};
 use crate::Lex;
 use crate::TokenImpl;
 use crate::{CombinedTokenizer, ITokenization};
@@ -143,6 +143,10 @@ fn tokenizer() {
     )
     .unwrap();
 
+    template_string
+        .set_log(Log::Result("template-string"))
+        .unwrap();
+
     let template_punctuations = Punctuations::new(vec![
         ("`", Token::TemplateTick),
         ("${", Token::TemplateExprStart),
@@ -174,6 +178,7 @@ fn tokenizer() {
             Rc::new(expression_punctuations_mixin),
         ],
     );
+    combined_tokenizer.set_log(Log::Default("combined-tokenizer")).unwrap();
 
     combined_tokenizer.add_state(
         TEMPLATE,
