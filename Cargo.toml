@@ -5,7 +5,7 @@ edition = "2021"
 readme = "README.md"
 description = "A parser tool to generate recursive descent top down parser."
 repository = "https://github.com/saikatpaik/lang-pt"   
-license-file = "LICENSE"
+license = "MIT OR Apache-2.0"
 keywords = [
     "parser", 
     "tokenizer",
