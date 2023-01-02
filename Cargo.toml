@@ -4,6 +4,7 @@ version = "0.1.2"
 edition = "2021"
 readme = "README.md"
 description = "A parser tool to generate recursive descent top down parser."
+documentation = "https://docs.rs/lang_pt"
 repository = "https://github.com/creative-forest/lang-pt" 
 license = "MIT OR Apache-2.0"
 keywords = [

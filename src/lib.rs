@@ -186,7 +186,7 @@
 //! ```
 
 //! # License
-//! [lang_pt](crate) is provided under the MIT license. See [LICENSE](../LICENSE).
+//! [lang_pt](crate) is provided under the MIT license. See [LICENSE](https://github.com/creative-forest/lang-pt/blob/main/LICENSE).
 mod ast_node;
 mod cache;
 mod code;
