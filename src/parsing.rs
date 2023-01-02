@@ -1,5 +1,5 @@
 use super::{Cache, DefaultParser, IProduction, ImplementationError, LexerlessParser, ParseError};
-use crate::{Code, ASTNode, FltrPtr, ITokenization, Lex, NodeImpl, TokenImpl, TokenStream};
+use crate::{ASTNode, Code, FltrPtr, ITokenization, Lex, NodeImpl, TokenImpl, TokenStream};
 use std::{
     collections::{HashMap, HashSet},
     rc::Rc,
@@ -132,9 +132,7 @@ impl<TN: NodeImpl, TL: TokenImpl> LexerlessParser<TN, TL> {
             #[cfg(debug_assertions)]
             debug_production_map: HashMap::new(),
         };
-        println!("Validating parser");
         parser.validate()?;
-        println!("Parser validated");
         Ok(parser)
     }
     pub fn grammar(&self) -> Result<String, std::fmt::Error> {
