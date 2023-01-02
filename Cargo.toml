@@ -1,6 +1,6 @@
 [package]
 name = "lang_pt"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 readme = "README.md"
 description = "A parser tool to generate recursive descent top down parser."
