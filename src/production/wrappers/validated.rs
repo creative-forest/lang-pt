@@ -1,6 +1,6 @@
 use crate::{
     production::{ProductionLogger, Validator},
-    util::Code,
+    Code,
     ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, ProductionError,
     TokenPtr, TokenStream,
 };
@@ -35,7 +35,7 @@ impl<
         TF: Fn(&Vec<ASTNode<TProd::Node>>, &[u8]) -> Result<(), ProductionError>,
     > Validator<TProd, TF>
 {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -47,7 +47,7 @@ impl<
         TF: Fn(&Vec<ASTNode<TProd::Node>>, &[u8]) -> Result<(), ProductionError>,
     > ProductionLogger for Validator<TProd, TF>
 {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }

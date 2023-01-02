@@ -1,6 +1,6 @@
 use crate::{
     production::{ProductionLogger, PunctuationsField},
-    util::Code,
+    Code,
     ASTNode, Cache, FieldTree, FltrPtr, IProduction, NodeImpl, ParsedResult, ProductionError,
     TokenPtr, SuccessData, TokenImpl, TokenStream,
 };
@@ -41,7 +41,7 @@ impl<TN: NodeImpl> PunctuationsField<TN, i8> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> PunctuationsField<TN, TL> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -62,7 +62,7 @@ impl<TN: NodeImpl, TL: TokenImpl> PunctuationsField<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> ProductionLogger for PunctuationsField<TN, TL> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }

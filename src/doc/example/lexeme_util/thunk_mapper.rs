@@ -1,6 +1,6 @@
 use crate::{
     lexeme::{Pattern, ThunkMapper},
-    util::Code,
+    Code,
     ITokenization, Lex, TokenImpl, Tokenizer,
 };
 use std::{io::BufRead, rc::Rc};

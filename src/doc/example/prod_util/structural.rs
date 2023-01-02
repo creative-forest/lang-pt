@@ -11,36 +11,24 @@ use std::rc::Rc;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum Token {
     ID,
-    Number,
-    Add,
-    Sub,
-    Mul,
-    Div,
-    LT,
-    LTE,
-    GT,
-    GTE,
-    EQ,
+    String,
     Space,
     Colon,
+    OpenAngle,
+    CloseAngle,
+    OpenAngleSlash,
+    ForwardSlash,
     LineBreak,
     Semicolon,
     KeywordVar,
     KeywordConst,
     KeywordLet,
-    KeywordIf,
     KeywordNumber,
     KeywordString,
     KeywordObject,
     KeywordBoolean,
     EOF,
     Assign,
-    OpenBrace,
-    CloseBrace,
-    OpenParen,
-    CloseParen,
-    OpenBracket,
-    CloseBracket,
 }
 
 impl TokenImpl for Token {
@@ -49,58 +37,34 @@ impl TokenImpl for Token {
     }
     fn is_structural(&self) -> bool {
         match self {
-            Token::Space | Token::LineBreak => false,
+            Token::Space => false,
             _ => true,
         }
     }
 }
 
 fn tokenizer() -> Tokenizer<Token> {
-    let mapped_identifier = Pattern::new(Token::ID, r#"^[_$a-zA-Z][_$\w]*"#)
-        .unwrap()
-        .mapping(vec![
-            ("var", Token::KeywordVar),
-            ("const", Token::KeywordConst),
-            ("let", Token::KeywordLet),
-            ("if", Token::KeywordIf),
-            ("boolean", Token::KeywordBoolean),
-            ("number", Token::KeywordNumber),
-            ("object", Token::KeywordObject),
-            ("string", Token::KeywordString),
-        ])
-        .unwrap();
+    let identifier = Pattern::new(Token::ID, r#"^[_$a-zA-Z][_$\w]*"#).unwrap();
 
-    let number_literal =
-        Pattern::new(Token::Number, r"^(0|[\d--0]\d*)(\.\d+)?([eE][+-]?\d+)?").unwrap();
-    let non_break_space = Pattern::new(Token::Space, r"^[^\S\r\n]+").unwrap();
-    let line_break = Pattern::new(Token::LineBreak, r"^[\r\n]+").unwrap();
+    let string_literal = Pattern::new(
+        Token::String,
+        r#"^"([^"\\\r\n]|(\\[^\S\r\n]*[\r\n][^\S\r\n]*)|\\.)*""#,
+    )
+    .unwrap();
+    let space = Pattern::new(Token::Space, r"^\s+").unwrap();
 
     let expression_punctuations = Punctuations::new(vec![
-        ("+", Token::Add),
-        ("-", Token::Sub),
-        ("*", Token::Mul),
-        ("/", Token::Div),
-        ("<", Token::LT),
-        ("<=", Token::LTE),
-        (">", Token::GT),
-        (">=", Token::GTE),
-        ("==", Token::EQ),
+        ("<", Token::OpenAngle),
+        (">", Token::CloseAngle),
+        ("</", Token::OpenAngleSlash),
+        ("/", Token::ForwardSlash),
         ("=", Token::Assign),
-        ("{", Token::OpenBrace),
-        ("}", Token::CloseBrace),
-        ("(", Token::OpenParen),
-        (")", Token::CloseParen),
-        ("[", Token::OpenBracket),
-        ("]", Token::CloseBracket),
-        (";", Token::Semicolon),
-        (":", Token::Colon),
     ])
     .unwrap();
     Tokenizer::new(vec![
-        Rc::new(non_break_space),
-        Rc::new(line_break),
-        Rc::new(mapped_identifier),
-        Rc::new(number_literal),
+        Rc::new(identifier),
+        Rc::new(space),
+        Rc::new(string_literal),
         Rc::new(expression_punctuations),
     ])
 }
@@ -109,6 +73,8 @@ fn tokenizer() -> Tokenizer<Token> {
 pub enum NodeValue {
     ID,
     Null,
+    String,
+    Attribute,
     KeywordVar,
     KeywordLet,
     KeywordConst,
@@ -132,19 +98,31 @@ impl NodeImpl for NodeValue {
 fn non_structural_test() {
     let eof = Rc::new(EOFProd::new(None));
     let id = Rc::new(TokenField::new(Token::ID, Some(NodeValue::ID)));
+    let string_value = Rc::new(TokenField::new(Token::String, Some(NodeValue::String)));
+    let hidden_assign = Rc::new(TokenField::new(Token::Assign, None));
+    let hidden_open_angle = Rc::new(TokenField::new(Token::OpenAngle, None));
+    let hidden_close_angle = Rc::new(TokenField::new(Token::OpenAngle, None));
+    let hidden_angle_slash = Rc::new(TokenField::new(Token::OpenAngleSlash, None));
 
-    let declaration_type = Rc::new(TokenFieldSet::new(vec![
-        (Token::KeywordVar, Some(NodeValue::KeywordVar)),
-        (Token::KeywordConst, Some(NodeValue::KeywordConst)),
-        (Token::KeywordLet, Some(NodeValue::KeywordLet)),
-    ]));
+    let attribute = Rc::new(
+        Concat::new("attribute", vec![id.clone(), hidden_assign, string_value])
+            .into_node(NodeValue::Attribute),
+    );
 
-    let typing_type_union = Rc::new(TokenFieldSet::new(vec![
-        (Token::KeywordNumber, Some(NodeValue::TypingNumber)),
-        (Token::KeywordBoolean, Some(NodeValue::TypingBool)),
-        (Token::KeywordObject, Some(NodeValue::TypingObject)),
-        (Token::KeywordString, Some(NodeValue::TypingString)),
-    ]));
+    let attribute_list = Rc::new(List::new(&attribute));
+
+    let children=Concat::init(identifier);
+
+
+    let element = Concat::new(
+        "xml_element",
+        vec![
+            hidden_open_angle,
+            id.clone(),
+            attribute_list,
+            hidden_close_angle,
+        ],
+    );
 
     let hidden_colon = Rc::new(TokenField::new(Token::Colon, None));
     let semi_colon = Rc::new(TokenField::new(Token::Semicolon, None));

@@ -1,6 +1,6 @@
 use super::{LexemeLogger, Mapper, ThunkMapper};
 use crate::{
-    util::{Code, Log},
+    Code, Log,
     ILexeme, Lex,
 };
 use once_cell::unsync::OnceCell;
@@ -46,7 +46,7 @@ impl<TS: ILexeme> Mapper<TS> {
 }
 
 impl<TLexer: ILexeme> LexemeLogger for Mapper<TLexer> {
-    fn log_cell(&self) -> &OnceCell<crate::util::Log<&'static str>> {
+    fn log_cell(&self) -> &OnceCell<crate::Log<&'static str>> {
         &self.log
     }
 }
@@ -108,7 +108,7 @@ impl<TL: ILexeme, TF: Fn(&Lex<TL::Token>, &[u8], &Vec<Lex<TL::Token>>) -> Option
 impl<TL: ILexeme, TF: Fn(&Lex<TL::Token>, &[u8], &Vec<Lex<TL::Token>>) -> Option<TL::Token>>
     LexemeLogger for ThunkMapper<TL, TF>
 {
-    fn log_cell(&self) -> &OnceCell<crate::util::Log<&'static str>> {
+    fn log_cell(&self) -> &OnceCell<crate::Log<&'static str>> {
         &self.log
     }
 }

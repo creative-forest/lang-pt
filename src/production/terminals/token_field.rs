@@ -1,8 +1,7 @@
 use crate::{
     production::{ProductionLogger, TokenField, TokenFieldSet},
-    util::{Code, Log},
-    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult,
-    ProductionError, TokenPtr, SuccessData, TokenImpl, TokenStream,
+    ASTNode, Cache, Code, FltrPtr, IProduction, ImplementationError, Log, NodeImpl, ParsedResult,
+    ProductionError, SuccessData, TokenImpl, TokenPtr, TokenStream,
 };
 use once_cell::unsync::OnceCell;
 use std::{
@@ -29,7 +28,7 @@ impl<TN: NodeImpl, TL: TokenImpl> TokenField<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> TokenField<TN, TL> {
-    pub fn set_log(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn set_log(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -79,7 +78,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenField<TN, TL> {
 
             match &self.node_value {
                 Some(node) => {
-                    let bound_start = stream.get_stream_ptr(index);
+                    let bound_start = stream.get_token_ptr(index);
 
                     Ok(SuccessData::tree(
                         index + 1,
@@ -219,7 +218,7 @@ impl<TN: NodeImpl, TL: TokenImpl> TokenFieldSet<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> TokenFieldSet<TN, TL> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -240,7 +239,7 @@ impl<TN: NodeImpl, TL: TokenImpl> Display for TokenFieldSet<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> ProductionLogger for TokenFieldSet<TN, TL> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }
@@ -276,7 +275,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for TokenFieldSet<TN, TL> {
 
                 match &self.token_set[i].1 {
                     Some(node) => {
-                        let bound_start = stream.get_stream_ptr(index);
+                        let bound_start = stream.get_token_ptr(index);
 
                         Ok(SuccessData::tree(
                             index + 1,

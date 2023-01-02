@@ -3,7 +3,7 @@ use crate::production::NTHelper;
 use crate::production::ProductionLogger;
 use crate::{
     production::{Suffixes, TSuffixMap},
-    util::Code,
+    Code,
     ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, ProductionError,
     SuccessData, TokenImpl, TokenPtr, TokenStream,
 };
@@ -58,8 +58,8 @@ impl<TP: IProduction> Suffixes<TP> {
         }
     }
 
-    /// Set a log label to debug the production based on the level of [Log](crate::util::Log).
-    pub fn set_log(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    /// Set a log label to debug the production based on the level of [Log](crate::Log).
+    pub fn set_log(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.nt_helper.assign_debugger(debugger)
     }
 
@@ -292,7 +292,7 @@ impl<TP: IProduction> IProduction for Suffixes<TP> {
             Err(_) => {
                 if !is_structural {
                     let last_token_ptr = if moved_ptr > FltrPtr::default() {
-                        token_stream.get_stream_ptr(moved_ptr - 1)
+                        token_stream.get_token_ptr(moved_ptr - 1)
                     } else {
                         TokenPtr::default()
                     };
@@ -330,8 +330,8 @@ impl<TP: IProduction> IProduction for Suffixes<TP> {
                                 token_stream.pointer(fltr_ptr),
                                 token_stream.pointer(data.consumed_index),
                                 Some((
-                                    token_stream.get_stream_ptr(fltr_ptr),
-                                    token_stream.get_stream_ptr(data.consumed_index),
+                                    token_stream.get_token_ptr(fltr_ptr),
+                                    token_stream.get_token_ptr(data.consumed_index),
                                 )),
                                 children,
                             );
@@ -359,8 +359,8 @@ impl<TP: IProduction> IProduction for Suffixes<TP> {
             }
             None => {
                 if let Some(i) = self.obtain_first_null_suffix() {
-                    let left_bound = token_stream.get_stream_ptr(fltr_ptr);
-                    let right_bound = token_stream.get_stream_ptr(left_success_data.consumed_index);
+                    let left_bound = token_stream.get_token_ptr(fltr_ptr);
+                    let right_bound = token_stream.get_token_ptr(left_success_data.consumed_index);
 
                     if !suffixes[*i].0.is_nullable_n_hidden() {
                         left_success_data.children.push(ASTNode::null(
@@ -487,7 +487,7 @@ impl<TP: IProduction> IProduction for Suffixes<TP> {
 
     fn advance_ptr(
         &self,
-        code: &crate::util::Code,
+        code: &crate::Code,
         index: usize,
         cache: &mut crate::Cache<usize, Self::Node>,
     ) -> crate::ParsedResult<usize, Self::Node> {

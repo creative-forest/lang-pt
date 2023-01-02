@@ -43,8 +43,7 @@ pub fn list_test() {
         PunctuationsField::new(vec![("+", Some(Token::Add)), ("-", Some(Token::Sub))]).unwrap(),
     );
 
-    let unary_operators_list =
-        Rc::new(List::new(&unary_operators).into_node(Some(Token::UnaryList)));
+    let unary_operators_list = Rc::new(List::new(&unary_operators).into_node(Token::UnaryList));
 
     let nullable_unary_operator_list = Rc::new(Nullable::new(&unary_operators_list));
 
@@ -58,9 +57,9 @@ pub fn list_test() {
                 id.clone(),
             ],
         )
-        .into_node(Some(Token::Expr)),
+        .into_node(Token::Expr),
     );
-    let main = Rc::new(Concat::new("main", vec![expression, eof]).into_node(Some(Token::Main)));
+    let main = Rc::new(Concat::new("main", vec![expression, eof]).into_node(Token::Main));
 
     let parser = LexerlessParser::new(main).unwrap();
 

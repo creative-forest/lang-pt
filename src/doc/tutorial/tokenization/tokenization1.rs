@@ -1,5 +1,5 @@
 use crate::lexeme::{Pattern, Punctuations};
-use crate::util::Code;
+use crate::Code;
 use crate::Lex;
 use crate::TokenImpl;
 use crate::{ITokenization, Tokenizer};

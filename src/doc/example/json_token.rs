@@ -1,4 +1,4 @@
-use crate::util::Code;
+use crate::Code;
 use crate::{
     lexeme::{Pattern, Punctuations},
     TokenImpl, Tokenizer,

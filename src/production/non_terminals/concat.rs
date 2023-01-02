@@ -1,7 +1,7 @@
 use crate::production::NTHelper;
 #[cfg(debug_assertions)]
 use crate::production::ProductionLogger;
-use crate::util::Log;
+use crate::Log;
 use crate::ImplementationError;
 use crate::{
     production::Concat, ASTNode, Cache, IProduction, NodeImpl, ParsedResult, SuccessData, TokenImpl,
@@ -222,7 +222,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
 
     fn advance_fltr_ptr(
         &self,
-        code: &crate::util::Code,
+        code: &crate::Code,
         index: crate::FltrPtr,
         stream: &crate::TokenStream<Self::Token>,
         cache: &mut Cache<crate::FltrPtr, Self::Node>,
@@ -243,7 +243,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
 
     fn advance_token_ptr(
         &self,
-        code: &crate::util::Code,
+        code: &crate::Code,
         index: crate::TokenPtr,
         stream: &crate::TokenStream<Self::Token>,
         cache: &mut Cache<crate::FltrPtr, Self::Node>,
@@ -263,7 +263,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Concat<TN, TL> {
 
     fn advance_ptr(
         &self,
-        code: &crate::util::Code,
+        code: &crate::Code,
         index: usize,
         cache: &mut Cache<usize, Self::Node>,
     ) -> ParsedResult<usize, Self::Node> {

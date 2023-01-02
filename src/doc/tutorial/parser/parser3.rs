@@ -239,11 +239,11 @@ fn flatten() {
 
     let product = Rc::new(SeparatedList::new(&value, &mul_ops, true)); // The separated should be inclusive i.e. operators should not be at the end of production.
 
-    let product_node = Rc::new(Node::new(&product, Some(NodeValue::Product)));
+    let product_node = Rc::new(Node::new(&product, NodeValue::Product));
 
     let sum = Rc::new(SeparatedList::new(&product_node, &add_ops, false));
 
-    let sum_node = Rc::new(Node::new(&sum, Some(NodeValue::Sum)));
+    let sum_node = Rc::new(Node::new(&sum, NodeValue::Sum));
 
     // Extending summation expression to compare arithmetic values.
     let cmp_ops = Rc::new(TokenFieldSet::new(vec![
@@ -257,7 +257,7 @@ fn flatten() {
     // Implementing comparison expression.
     let cmp_expr = Rc::new(SeparatedList::new(&sum_node, &cmp_ops, true));
 
-    let cmp_expr_node = Rc::new(Node::new(&cmp_expr, Some(NodeValue::Comparative)));
+    let cmp_expr_node = Rc::new(Node::new(&cmp_expr, NodeValue::Comparative));
 
     let semicolon = Rc::new(TokenField::new(Token::Semicolon, None));
 
@@ -312,7 +312,7 @@ fn flatten() {
 
     let line_break_seq = Rc::new(
         Concat::new("line_break_seq", vec![hidden_null_white_space, line_break])
-            .into_node(Some(NodeValue::ExprTermination)),
+            .into_node(NodeValue::ExprTermination),
     );
 
     let expression_termination = Rc::new(Union::new(
@@ -330,10 +330,10 @@ fn flatten() {
         vec![expr_part.clone(), expression_termination],
     ));
 
-    let expr_node = Rc::new(Node::new(&expression, Some(NodeValue::Expr)));
+    let expr_node = Rc::new(Node::new(&expression, NodeValue::Expr));
 
     let root = Rc::new(Concat::new("root", vec![expr_node.clone(), end_of_file]));
-    let root_node = Rc::new(Node::new(&root, Some(NodeValue::Root)));
+    let root_node = Rc::new(Node::new(&root, NodeValue::Root));
     // Setting thr production for parenthesis_expr.
 
     let open_paren = Rc::new(TokenField::new(Token::OpenParen, None));

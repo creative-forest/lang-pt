@@ -14,7 +14,7 @@ enum NodeValue {
     Mul,
     Div,
     NULL,
-    Root
+    Root,
 }
 
 impl NodeImpl for NodeValue {
@@ -53,7 +53,7 @@ fn union_test() {
     ));
 
     let main = Rc::new(Concat::new("main", vec![expression, eof]));
-    let main_node = Rc::new(Node::new(&main, Some(NodeValue::Root)));
+    let main_node = Rc::new(Node::new(&main, NodeValue::Root));
 
     let parser = LexerlessParser::new(main_node).unwrap();
     let tree_list = parser.parse(b"ax+by").unwrap();

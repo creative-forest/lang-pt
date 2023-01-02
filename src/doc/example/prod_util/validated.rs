@@ -60,9 +60,8 @@ fn validation_test() {
         }
         Ok(())
     }));
-    let root_node = Rc::new(
-        Concat::new("main", vec![validated_xml_element, eof]).into_node(Some(NodeValue::Root)),
-    );
+    let root_node =
+        Rc::new(Concat::new("main", vec![validated_xml_element, eof]).into_node(NodeValue::Root));
 
     let parser = LexerlessParser::new(root_node).unwrap();
 

@@ -1,6 +1,6 @@
 use crate::{
     lexeme::{Action, Pattern, Punctuations, ThunkStateMixin},
-    util::Code,
+    Code,
     ITokenization, Lex, TokenImpl, Tokenizer,
 };
 use std::rc::Rc;

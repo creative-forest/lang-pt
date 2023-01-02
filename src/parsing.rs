@@ -1,9 +1,8 @@
 use super::{Cache, DefaultParser, IProduction, ImplementationError, LexerlessParser, ParseError};
-use crate::{util::Code, ASTNode, FltrPtr, ITokenization, Lex, NodeImpl, TokenImpl, TokenStream};
+use crate::{Code, ASTNode, FltrPtr, ITokenization, Lex, NodeImpl, TokenImpl, TokenStream};
 use std::{
     collections::{HashMap, HashSet},
     rc::Rc,
-    time::Instant,
 };
 
 impl<TN: NodeImpl, TL: TokenImpl> DefaultParser<TN, TL> {
@@ -65,14 +64,9 @@ impl<TN: NodeImpl, TL: TokenImpl> DefaultParser<TN, TL> {
     }
     pub fn parse<'lex>(&self, text: &[u8]) -> Result<Vec<ASTNode<TN>>, ParseError> {
         let code = Code::new(text);
-        let tokenize_instant = Instant::now();
         let lexical_stream = self.tokenize(&code)?;
-        println!("Tokenize time {:?}", tokenize_instant.elapsed());
-        let parser_instant = Instant::now();
         let filtered_stream = TokenStream::from(&lexical_stream);
-        let result = self.parse_stream(&code, filtered_stream);
-        println!("Parsing time {:?}", parser_instant.elapsed());
-        result
+        self.parse_stream(&code, filtered_stream)
     }
 
     pub fn add_debug_production<T: IProduction<Node = TN, Token = TL> + 'static>(

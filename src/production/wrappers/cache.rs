@@ -1,6 +1,6 @@
 use crate::{
     production::{Cacheable, ProductionLogger},
-    util::Code,
+    Code,
     Cache, CacheKey, FltrPtr, IProduction, ImplementationError, ParsedResult, TokenPtr,
     TokenStream,
 };
@@ -27,7 +27,7 @@ impl<TProd: IProduction> Cacheable<TProd> {
 }
 
 impl<TP: IProduction> Cacheable<TP> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -35,7 +35,7 @@ impl<TP: IProduction> Cacheable<TP> {
 }
 
 impl<TProd: IProduction> ProductionLogger for Cacheable<TProd> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }

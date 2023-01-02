@@ -1,5 +1,5 @@
 use super::{
-    List, Lookahead, Node, Nullable, ProductionBuilder, SeparatedList, Suffixes, Validator,
+    Hidden, List, Lookahead, Node, Nullable, ProductionBuilder, SeparatedList, Suffixes, Validator,
 };
 use crate::{ASTNode, IProduction, ProductionError};
 use std::rc::Rc;
@@ -12,11 +12,18 @@ impl<T: IProduction> ProductionBuilder for T {
         List::new(&Rc::new(self))
     }
 
-    fn into_node(self, node_value: Option<Self::Node>) -> Node<Self>
+    fn into_node(self, node_value: Self::Node) -> Node<Self>
     where
         Self: Sized,
     {
         Node::new(&Rc::new(self), node_value)
+    }
+
+    fn into_hidden(self) -> Hidden<Self>
+    where
+        Self: Sized,
+    {
+        Hidden::new(&Rc::new(self))
     }
 
     fn into_lookahead(self, node_value: Option<Self::Node>) -> Lookahead<Self>
@@ -63,5 +70,12 @@ impl<T: IProduction> ProductionBuilder for T {
         Self: Sized,
     {
         Validator::new(&Rc::new(self), validation_fn)
+    }
+
+    fn into_null_hidden(self) -> Nullable<Self>
+    where
+        Self: Sized,
+    {
+        Nullable::hidden(&Rc::new(self))
     }
 }

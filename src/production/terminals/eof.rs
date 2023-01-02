@@ -1,6 +1,6 @@
 use crate::{
     production::{EOFProd, ProductionLogger},
-    util::Code,
+    Code,
     ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult,
     ProductionError, TokenPtr, SuccessData, TokenImpl, TokenStream,
 };
@@ -23,7 +23,7 @@ impl<'field, TN: NodeImpl, TL: TokenImpl> EOFProd<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> EOFProd<TN, TL> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -31,7 +31,7 @@ impl<TN: NodeImpl, TL: TokenImpl> EOFProd<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> ProductionLogger for EOFProd<TN, TL> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }
@@ -89,7 +89,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for EOFProd<TN, TL> {
             self.log_success(code, eof_pointer, eof_pointer);
             match &self.node_value {
                 Some(node_value) => {
-                    let lex_index = stream.get_stream_ptr(index);
+                    let lex_index = stream.get_token_ptr(index);
                     let tree = ASTNode::leaf(
                         node_value.clone(),
                         eof_pointer,

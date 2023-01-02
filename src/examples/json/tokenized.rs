@@ -125,7 +125,7 @@ pub fn json_grammar() -> DefaultParser<JSONNode, JSONToken> {
         ],
     ));
 
-    let json_object_item_node = Rc::new(Node::new(&json_object_item, Some(JSONNode::Item)));
+    let json_object_item_node = Rc::new(Node::new(&json_object_item, JSONNode::Item));
 
     let json_object_item_list =
         Rc::new(SeparatedList::new(&json_object_item_node, &hidden_comma, true).into_nullable());
@@ -141,10 +141,10 @@ pub fn json_grammar() -> DefaultParser<JSONNode, JSONToken> {
                 hidden_close_bracket.clone(),
             ],
         )
-        .into_node(Some(JSONNode::Array)),
+        .into_node(JSONNode::Array),
     );
 
-    let json_object_node = Rc::new(Node::new(&json_object, Some(JSONNode::Object)));
+    let json_object_node = Rc::new(Node::new(&json_object, JSONNode::Object));
 
     json_value_union
         .set_symbols(vec![
@@ -163,7 +163,7 @@ pub fn json_grammar() -> DefaultParser<JSONNode, JSONToken> {
         .unwrap();
 
     let main = Rc::new(Concat::new("root", vec![json_value_union, eof]));
-    let main_node = Rc::new(Node::new(&main, Some(JSONNode::Main)));
+    let main_node = Rc::new(Node::new(&main, JSONNode::Main));
 
     let lexer = json_tokenizer();
 

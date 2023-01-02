@@ -1,7 +1,7 @@
-use crate::production::{Node, ProductionLogger};
+use crate::production::{Hidden, ProductionLogger};
 use crate::Code;
 use crate::{
-    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, SuccessData, TokenPtr,
+    Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, SuccessData, TokenPtr,
     TokenStream,
 };
 use once_cell::unsync::OnceCell;
@@ -11,11 +11,17 @@ use std::{
     rc::Rc,
 };
 
-impl<TProd: IProduction> Node<TProd> {
-    pub fn new(production: &Rc<TProd>, node_value: TProd::Node) -> Self {
+impl<TProd: IProduction> Hidden<TProd> {
+    pub fn new(production: &Rc<TProd>) -> Self {
         Self {
             rule_name: OnceCell::new(),
-            node_value: node_value,
+            production: production.clone(),
+            debugger: OnceCell::new(),
+        }
+    }
+    pub fn hidden(production: &Rc<TProd>) -> Self {
+        Self {
+            rule_name: OnceCell::new(),
             production: production.clone(),
             debugger: OnceCell::new(),
         }
@@ -31,7 +37,7 @@ impl<TProd: IProduction> Node<TProd> {
     }
 }
 
-impl<TP: IProduction> Node<TP> {
+impl<TP: IProduction> Hidden<TP> {
     pub fn set_log(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
@@ -39,23 +45,23 @@ impl<TP: IProduction> Node<TP> {
     }
 }
 
-impl<TProd: IProduction> ProductionLogger for Node<TProd> {
+impl<TProd: IProduction> ProductionLogger for Hidden<TProd> {
     fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }
 
-impl<TProd: IProduction> Display for Node<TProd> {
+impl<TProd: IProduction> Display for Hidden<TProd> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.rule_name.get() {
             Some(&s) => write!(f, "{}", s),
             None => {
-                write!(f, "[{}; @{:?}]", self.get_production(), self.node_value)
+                write!(f, "[{};]", self.get_production())
             }
         }
     }
 }
-impl<TProd: IProduction> IProduction for Node<TProd> {
+impl<TProd: IProduction> IProduction for Hidden<TProd> {
     type Node = TProd::Node;
     type Token = TProd::Token;
 
@@ -73,13 +79,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
             Some(&s) => {
                 if visited.insert(s.into()) {
                     writeln!(writer, "{}", s)?;
-                    writeln!(
-                        writer,
-                        "{:>6} [{}; @{:?}]",
-                        ":",
-                        self.get_production(),
-                        self.node_value
-                    )?;
+                    writeln!(writer, "{:>6} [{};]", ":", self.get_production())?;
                     writeln!(writer, "{:>6}", ";")?;
                 }
             }
@@ -100,7 +100,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
         self.production.impl_first_set(first_set)
     }
     fn is_nullable_n_hidden(&self) -> bool {
-        false
+        self.is_nullable()
     }
 
     #[inline]
@@ -109,7 +109,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
         first_sets: HashMap<&'id str, usize>,
         visited_prod: &mut HashSet<&'id str>,
     ) -> Result<(), ImplementationError> {
-        // println!("Validating Node:{}", self.get_id());
+        // println!("Validating Hidden:{}", self.get_id());
         self.get_production().validate(first_sets, visited_prod)
     }
 
@@ -126,20 +126,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
         let result = self
             .get_production()
             .advance_fltr_ptr(code, index, token_stream, cached)
-            .map(|parsed_data| {
-                let tree = ASTNode::new(
-                    self.node_value.clone(),
-                    token_stream.pointer(index),
-                    token_stream.pointer(parsed_data.consumed_index),
-                    Some((
-                        token_stream.get_token_ptr(index),
-                        token_stream.get_token_ptr(parsed_data.consumed_index),
-                    )),
-                    parsed_data.children,
-                );
-
-                SuccessData::tree(parsed_data.consumed_index, tree)
-            });
+            .map(|parsed_data| SuccessData::hidden(parsed_data.consumed_index));
 
         #[cfg(debug_assertions)]
         self.log_filtered_result(code, index, token_stream, &result);
@@ -160,17 +147,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
         let result = self
             .get_production()
             .advance_token_ptr(code, index, token_stream, cache)
-            .map(|parsed_data| {
-                let tree = ASTNode::new(
-                    self.node_value.clone(),
-                    token_stream[index].start,
-                    token_stream[parsed_data.consumed_index].start,
-                    Some((index, parsed_data.consumed_index)),
-                    parsed_data.children,
-                );
-
-                SuccessData::tree(parsed_data.consumed_index, tree)
-            });
+            .map(|parsed_data| SuccessData::hidden(parsed_data.consumed_index));
 
         #[cfg(debug_assertions)]
         self.log_lex_result(code, index, token_stream, &result);
@@ -190,17 +167,7 @@ impl<TProd: IProduction> IProduction for Node<TProd> {
         let result = self
             .get_production()
             .advance_ptr(code, index, cache)
-            .map(|parsed_data| {
-                let tree = ASTNode::new(
-                    self.node_value.clone(),
-                    index,
-                    parsed_data.consumed_index,
-                    None,
-                    parsed_data.children,
-                );
-
-                SuccessData::tree(parsed_data.consumed_index, tree)
-            });
+            .map(|parsed_data| SuccessData::hidden(parsed_data.consumed_index));
 
         #[cfg(debug_assertions)]
         self.log_result(code, index, &result);

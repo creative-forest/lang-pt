@@ -1,6 +1,6 @@
 use crate::{
     production::{ConstantField, ConstantFieldSet, ProductionLogger},
-    util::Code,
+    Code,
     ASTNode, Cache, FltrPtr, IProduction, NodeImpl, ParsedResult, ProductionError, TokenPtr,
     SuccessData, TokenImpl, TokenStream,
 };
@@ -27,7 +27,7 @@ impl<TN: NodeImpl> ConstantField<TN, i8> {
     }
 }
 impl<TN: NodeImpl, TL: TokenImpl> ConstantField<TN, TL> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -35,7 +35,7 @@ impl<TN: NodeImpl, TL: TokenImpl> ConstantField<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> ProductionLogger for ConstantField<TN, TL> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }
@@ -162,7 +162,7 @@ impl<TN: NodeImpl> ConstantFieldSet<TN, i8> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> ConstantFieldSet<TN, TL> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -170,7 +170,7 @@ impl<TN: NodeImpl, TL: TokenImpl> ConstantFieldSet<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> ProductionLogger for ConstantFieldSet<TN, TL> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }

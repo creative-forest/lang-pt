@@ -1,5 +1,5 @@
 use super::{NTHelper, ProductionLogger};
-use crate::{util::Log, ImplementationError};
+use crate::{ImplementationError, Log};
 use once_cell::unsync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
@@ -95,7 +95,7 @@ impl NTHelper {
 }
 
 impl ProductionLogger for NTHelper {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }

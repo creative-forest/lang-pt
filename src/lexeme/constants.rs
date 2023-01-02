@@ -1,6 +1,6 @@
 use super::{Constants, LexemeLogger};
 use crate::{
-    util::{Code, Log},
+    Code, Log,
     ILexeme, Lex,
 };
 use once_cell::unsync::OnceCell;
@@ -30,7 +30,7 @@ impl<TToken: Debug + Copy, TState> Constants<TToken, TState> {
 }
 
 impl<TToken, TState> LexemeLogger for Constants<TToken, TState> {
-    fn log_cell(&self) -> &OnceCell<crate::util::Log<&'static str>> {
+    fn log_cell(&self) -> &OnceCell<crate::Log<&'static str>> {
         &self.log
     }
 }

@@ -2,7 +2,7 @@ use crate::production::NTHelper;
 #[cfg(debug_assertions)]
 use crate::production::ProductionLogger;
 use crate::{
-    production::Union, util::Code, ASTNode, Cache, FltrPtr, IProduction, ImplementationError,
+    production::Union, Code, ASTNode, Cache, FltrPtr, IProduction, ImplementationError,
     NodeImpl, ParsedResult, ProductionError, SuccessData, TokenImpl, TokenPtr, TokenStream,
 };
 
@@ -46,8 +46,8 @@ impl<TN: NodeImpl, TL: TokenImpl> Union<TN, TL> {
         }
     }
 
-    /// Set a log label to debug the production based on the level of [Log](crate::util::Log).
-    pub fn set_log(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    /// Set a log label to debug the production based on the level of [Log](crate::Log).
+    pub fn set_log(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.nt_helper.assign_debugger(debugger)
     }
 
@@ -239,7 +239,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Union<TN, TL> {
             Err(_) => {
                 if !is_structural {
                     let last_token_ptr = if fltr_ptr > FltrPtr::default() {
-                        token_stream.get_stream_ptr(fltr_ptr - 1)
+                        token_stream.get_token_ptr(fltr_ptr - 1)
                     } else {
                         TokenPtr::default()
                     };
@@ -290,7 +290,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Union<TN, TL> {
                 } else if self.is_nullable() {
                     let tree = ASTNode::null(
                         token_stream[fltr_ptr].start,
-                        Some(token_stream.get_stream_ptr(fltr_ptr)),
+                        Some(token_stream.get_token_ptr(fltr_ptr)),
                     );
                     return Ok(SuccessData::tree(fltr_ptr, tree));
                 }
@@ -363,7 +363,7 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for Union<TN, TL> {
 
     fn advance_ptr(
         &self,
-        code: &crate::util::Code,
+        code: &crate::Code,
         index: usize,
         cache: &mut Cache<usize, Self::Node>,
     ) -> ParsedResult<usize, Self::Node> {

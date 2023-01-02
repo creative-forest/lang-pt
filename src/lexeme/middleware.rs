@@ -1,6 +1,6 @@
 use super::{LexemeLogger, Middleware};
 use crate::{
-    util::{Code, Log},
+    Code, Log,
     ILexeme, Lex,
 };
 use once_cell::unsync::OnceCell;
@@ -32,7 +32,7 @@ impl<TS: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TS::Token>>) -> bool>
 impl<TL: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TL::Token>>) -> bool> LexemeLogger
     for Middleware<TL, TMiddleware>
 {
-    fn log_cell(&self) -> &OnceCell<crate::util::Log<&'static str>> {
+    fn log_cell(&self) -> &OnceCell<crate::Log<&'static str>> {
         &self.log_label
     }
 }

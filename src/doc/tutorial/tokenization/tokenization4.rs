@@ -1,5 +1,5 @@
 use crate::lexeme::{Action, Mapper, Middleware, Pattern, Punctuations, StateMixin};
-use crate::util::Code;
+use crate::Code;
 use crate::Lex;
 use crate::TokenImpl;
 use crate::{CombinedTokenizer, ITokenization};

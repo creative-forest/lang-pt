@@ -1,8 +1,8 @@
 use crate::{
     production::{NullProd, ProductionLogger},
-    util::Code,
-    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult, TokenPtr,
-    SuccessData, TokenImpl, TokenStream,
+    Code,
+    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult, SuccessData,
+    TokenImpl, TokenPtr, TokenStream,
 };
 use once_cell::unsync::OnceCell;
 use std::{
@@ -13,17 +13,30 @@ use std::{
 
 impl<TN: NodeImpl, TL: TokenImpl> NullProd<TN, TL> {
     /// Create a new NullProd.
+    ///
+    /// The null derivation create a tree node with [null][NodeImpl::null] value in the [ASTNode].
     pub fn new() -> Self {
         NullProd {
             debugger: OnceCell::new(),
-            _node: PhantomData,
+            node_value: Some(TN::null()),
+            _token: PhantomData,
+        }
+    }
+
+    /// Create a new NullProd.
+    ///
+    /// The null derivation does not create any tree node in the [ASTNode].
+    pub fn hidden() -> Self {
+        NullProd {
+            debugger: OnceCell::new(),
+            node_value: None,
             _token: PhantomData,
         }
     }
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> NullProd<TN, TL> {
-    pub fn set_log(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn set_log(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -31,7 +44,7 @@ impl<TN: NodeImpl, TL: TokenImpl> NullProd<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> ProductionLogger for NullProd<TN, TL> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }
@@ -76,11 +89,22 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for NullProd<TN, TL> {
         token_stream: &TokenStream<Self::Token>,
         _: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<FltrPtr, Self::Node> {
-        let pointer = token_stream.pointer(index);
-        Ok(SuccessData::tree(
-            index,
-            ASTNode::null(pointer, Some(token_stream.get_stream_ptr(index))),
-        ))
+        match &self.node_value {
+            Some(node_value) => {
+                let pointer = token_stream.pointer(index);
+                let lex_bound = token_stream.get_token_ptr(index);
+                Ok(SuccessData::tree(
+                    index,
+                    ASTNode::leaf(
+                        node_value.clone(),
+                        pointer,
+                        pointer,
+                        Some((lex_bound, lex_bound)),
+                    ),
+                ))
+            }
+            None => Ok(SuccessData::hidden(index)),
+        }
     }
 
     fn advance_token_ptr(
@@ -90,11 +114,16 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for NullProd<TN, TL> {
         token_stream: &TokenStream<Self::Token>,
         _: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<TokenPtr, Self::Node> {
-        let pointer = token_stream[index].start;
-        Ok(SuccessData::tree(
-            index,
-            ASTNode::null(pointer, Some(index)),
-        ))
+        match &self.node_value {
+            Some(node_value) => {
+                let pointer = token_stream[index].start;
+                Ok(SuccessData::tree(
+                    index,
+                    ASTNode::leaf(node_value.clone(), pointer, pointer, Some((index, index))),
+                ))
+            }
+            None => Ok(SuccessData::hidden(index)),
+        }
     }
 
     fn advance_ptr(
@@ -103,7 +132,13 @@ impl<TN: NodeImpl, TL: TokenImpl> IProduction for NullProd<TN, TL> {
         index: usize,
         _: &mut Cache<usize, Self::Node>,
     ) -> ParsedResult<usize, Self::Node> {
-        Ok(SuccessData::tree(index, ASTNode::null(index, None)))
+        match &self.node_value {
+            Some(node_value) => Ok(SuccessData::tree(
+                index,
+                ASTNode::leaf(node_value.clone(), index, index, None),
+            )),
+            None => Ok(SuccessData::hidden(index)),
+        }
     }
 
     fn impl_grammar(

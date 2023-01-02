@@ -44,11 +44,10 @@ fn separated_list_test() {
             "ArrayLiteral",
             vec![open_bracket, array_items, close_bracket],
         )
-        .into_node(Some(NodeValue::Array)),
+        .into_node(NodeValue::Array),
     );
 
-    let main =
-        Rc::new(Concat::new("main", vec![array_literal, eof]).into_node(Some(NodeValue::Main)));
+    let main = Rc::new(Concat::new("main", vec![array_literal, eof]).into_node(NodeValue::Main));
 
     let parser = LexerlessParser::new(main).unwrap();
 

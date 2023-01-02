@@ -41,7 +41,7 @@ fn node_test() {
     ));
 
     let main = Rc::new(Concat::new("Main", vec![expression.clone(), eof]));
-    let main_node = Rc::new(Node::new(&main, Some(NodeValue::Main)));
+    let main_node = Rc::new(Node::new(&main, NodeValue::Main));
 
     let parser = LexerlessParser::new(main_node).unwrap();
 

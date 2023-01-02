@@ -1,5 +1,5 @@
-use crate::util::Code;
-use crate::{util::Log, CombinedTokenizer, ILexeme, TokenImpl, Tokenizer};
+use crate::Code;
+use crate::{CombinedTokenizer, ILexeme, Log, TokenImpl, Tokenizer};
 use crate::{ITokenization, Lex, ParseError};
 use once_cell::unsync::OnceCell;
 use std::fmt::Debug;
@@ -118,7 +118,13 @@ impl<TToken: TokenImpl, TState: Copy + Debug + Ord + Eq> ITokenization
                 };
                 #[cfg(debug_assertions)]
                 if debug.order() >= Log::Default(()).order() {
-                    println!("Switching state {:?} -> {:?}", current_state, latest_state);
+                    println!(
+                        "{} : Switching state {:?} -> {:?} at {}",
+                        debug,
+                        current_state,
+                        latest_state,
+                        code.obtain_position(pointer)
+                    );
                 }
 
                 current_state = latest_state;

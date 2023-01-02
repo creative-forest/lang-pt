@@ -1,8 +1,5 @@
 use super::{LexemeLogger, Punctuations};
-use crate::{
-    util::{Code, Log},
-    FieldTree, ILexeme, Lex,
-};
+use crate::{Code, FieldTree, ILexeme, Lex, Log};
 use once_cell::unsync::OnceCell;
 use std::{fmt::Debug, marker::PhantomData};
 
@@ -50,7 +47,7 @@ impl<TToken: Debug + Copy, TState> Punctuations<TToken, TState> {
 }
 
 impl<TToken, TState> LexemeLogger for Punctuations<TToken, TState> {
-    fn log_cell(&self) -> &OnceCell<crate::util::Log<&'static str>> {
+    fn log_cell(&self) -> &OnceCell<crate::Log<&'static str>> {
         &self.log
     }
 }

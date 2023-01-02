@@ -60,7 +60,7 @@ fn circular_dependency_test() {
     p3.set_symbols(vec![p4.clone(), p2.clone(), p3.clone()])
         .unwrap();
 
-    let p5 = Rc::new(Node::new(&p4, Some(NodeValue::R)));
+    let p5 = Rc::new(Node::new(&p4, NodeValue::R));
     let now = Instant::now();
     match LexerlessParser::new(p5) {
         Ok(_) => panic!("Validation should fail."),
@@ -86,7 +86,7 @@ fn circular_dependency_test2() {
 
     p3.set_symbols(vec![np3.clone(), p3.clone()]).unwrap();
 
-    let p5 = Rc::new(Node::new(&p4, Some(NodeValue::R)));
+    let p5 = Rc::new(Node::new(&p4, NodeValue::R));
     let now = Instant::now();
     match LexerlessParser::new(p5) {
         Ok(_) => panic!("Validation should fail."),

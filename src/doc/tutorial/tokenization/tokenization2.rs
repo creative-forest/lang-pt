@@ -1,7 +1,7 @@
 use crate::lexeme::Mapper;
 use crate::lexeme::Pattern;
 use crate::lexeme::Punctuations;
-use crate::util::Code;
+use crate::Code;
 use crate::ITokenization;
 use crate::Lex;
 use crate::TokenImpl;

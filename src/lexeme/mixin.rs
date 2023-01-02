@@ -1,11 +1,6 @@
-use std::fmt::Debug;
-
+use crate::{Code, ILexeme, Lex, Log};
 use once_cell::unsync::OnceCell;
-
-use crate::{
-    util::{Code, Log},
-    ILexeme, Lex,
-};
+use std::fmt::Debug;
 
 use super::{Action, LexemeLogger, StateMixin, ThunkStateMixin};
 
@@ -74,7 +69,7 @@ impl<TL: ILexeme> StateMixin<TL> {
     }
 }
 impl<TL: ILexeme> LexemeLogger for StateMixin<TL> {
-    fn log_cell(&self) -> &OnceCell<crate::util::Log<&'static str>> {
+    fn log_cell(&self) -> &OnceCell<crate::Log<&'static str>> {
         &self.log
     }
 }
@@ -146,7 +141,7 @@ impl<TL: ILexeme, TF: Fn(&Lex<TL::Token>, &[u8], &Vec<Lex<TL::Token>>) -> Action
 impl<TL: ILexeme, TF: Fn(&Lex<TL::Token>, &[u8], &Vec<Lex<TL::Token>>) -> Action<TL::State>>
     LexemeLogger for ThunkStateMixin<TL, TF>
 {
-    fn log_cell(&self) -> &OnceCell<crate::util::Log<&'static str>> {
+    fn log_cell(&self) -> &OnceCell<crate::Log<&'static str>> {
         &self.log
     }
 }

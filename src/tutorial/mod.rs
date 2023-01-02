@@ -87,7 +87,7 @@
 //!
 //! ```
 //! use lang_pt::lexeme::{Pattern, Punctuations};
-//! use lang_pt::util::Code;
+//! use lang_pt::Code;
 //! use lang_pt::Lex;
 //! use lang_pt::{ITokenization, Tokenizer};
 //! use std::rc::Rc;
@@ -260,7 +260,7 @@
 //!
 //! ```rust,no_run
 //! use lang_pt::lexeme::{Action, Mapper, Pattern, Punctuations, StateMixin};
-//! use lang_pt::util::Code;
+//! use lang_pt::Code;
 //! use lang_pt::Lex;
 //! use lang_pt::TokenImpl;
 //! use lang_pt::{CombinedTokenizer, ITokenization};

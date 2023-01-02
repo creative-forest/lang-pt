@@ -1,5 +1,5 @@
 use super::{LexemeLogger, Pattern};
-use crate::util::{Code, Log};
+use crate::{Code, Log};
 use crate::{ILexeme, Lex};
 use once_cell::unsync::OnceCell;
 use regex::bytes::Regex;
@@ -43,7 +43,7 @@ impl<TToken, TState> Pattern<TToken, TState> {
 }
 
 impl<TToken, TState> LexemeLogger for Pattern<TToken, TState> {
-    fn log_cell(&self) -> &OnceCell<crate::util::Log<&'static str>> {
+    fn log_cell(&self) -> &OnceCell<crate::Log<&'static str>> {
         &self.log
     }
 }

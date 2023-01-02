@@ -7,8 +7,189 @@
 //! where the production utilities like [RegexField]
 //! [PunctuationsField], [ConstantField] will match string values.
 //! Therefore the former utilities can be used to create a [LexerlessParser](crate::LexerlessParser)
-//! which does not need to define a tokenizer.
+//! which does not need to define a tokenizer separately.
 //!
+//! # Example
+//!
+//! Following a grammar implementation for JSON parser
+//!
+//! ```
+//! use lang_pt::production::ProductionBuilder;
+//! use lang_pt::{
+//!     lexeme::{Pattern, Punctuations},
+//!     production::{Concat, EOFProd, Node, SeparatedList, TokenField, TokenFieldSet, Union},
+//!     DefaultParser, NodeImpl, TokenImpl, Tokenizer,
+//! };
+//! use std::rc::Rc;
+//!
+//! # #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+//! # pub enum JSONToken {
+//! #     EOF,
+//! #     String,
+//! #     Space,
+//! #     Colon,
+//! #     Comma,
+//! #     Number,
+//! #     Constant,
+//! #     OpenBrace,
+//! #     CloseBrace,
+//! #     OpenBracket,
+//! #     CloseBracket,
+//! # }
+//!
+//! #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+//! pub enum JSONNode {
+//!     Key,
+//!     String,
+//!     Number,
+//!     Constant,
+//!     Array,
+//!     Object,
+//!     Item,
+//!     Main,
+//!     NULL,
+//! }
+//!
+//! # impl TokenImpl for JSONToken {
+//! #     fn eof() -> Self {
+//! #         JSONToken::EOF
+//! #     }
+//! #     fn is_structural(&self) -> bool {
+//! #         match self {
+//! #             JSONToken::Space => false,
+//! #             _ => true,
+//! #         }
+//! #     }
+//! # }
+//! impl NodeImpl for JSONNode {
+//!     fn null() -> Self {
+//!         JSONNode::NULL
+//!     }
+//! }
+//!
+//! # let punctuations = Rc::new(
+//! #     Punctuations::new(vec![
+//! #         ("{", JSONToken::OpenBrace),
+//! #         ("}", JSONToken::CloseBrace),
+//! #         ("[", JSONToken::OpenBracket),
+//! #         ("]", JSONToken::CloseBracket),
+//! #         (",", JSONToken::Comma),
+//! #         (":", JSONToken::Colon),
+//! #     ])
+//! #     .unwrap(),
+//! # );
+//! #
+//! # let dq_string = Rc::new(
+//! #     Pattern::new(
+//! #         JSONToken::String,
+//! #         r#"^"([^"\\\r\n]|(\\[^\S\r\n]*[\r\n][^\S\r\n]*)|\\.)*""#, //["\\bfnrtv]
+//! #     )
+//! #     .unwrap(),
+//! # );
+//! #
+//! # let lex_space = Rc::new(Pattern::new(JSONToken::Space, r"^\s+").unwrap());
+//! # let number_literal = Rc::new(
+//! #     Pattern::new(JSONToken::Number, r"^([0-9]+)(\.[0-9]+)?([eE][+-]?[0-9]+)?").unwrap(),
+//! # );
+//! # let const_literal = Rc::new(Pattern::new(JSONToken::Constant, r"^(true|false|null)").unwrap());
+//! #
+//! # let tokenizer=Tokenizer::new(vec![
+//! #     lex_space,
+//! #     punctuations,
+//! #     dq_string,
+//! #     number_literal,
+//! #     const_literal,
+//! # ]);
+//!
+//! let eof = Rc::new(EOFProd::new(None));
+//!
+//! let json_key = Rc::new(TokenField::new(JSONToken::String, Some(JSONNode::Key)));
+//!
+//! let json_primitive_values = Rc::new(TokenFieldSet::new(vec![
+//!     (JSONToken::String, Some(JSONNode::String)),
+//!     (JSONToken::Constant, Some(JSONNode::Constant)),
+//!     (JSONToken::Number, Some(JSONNode::Number)),
+//! ]));
+//!
+//!
+//! let hidden_open_brace = Rc::new(TokenField::new(JSONToken::OpenBrace, None));
+//! let hidden_close_brace = Rc::new(TokenField::new(JSONToken::CloseBrace, None));
+//! let hidden_open_bracket = Rc::new(TokenField::new(JSONToken::OpenBracket, None));
+//! let hidden_close_bracket = Rc::new(TokenField::new(JSONToken::CloseBracket, None));
+//! let hidden_comma = Rc::new(TokenField::new(JSONToken::Comma, None));
+//! let hidden_colon = Rc::new(TokenField::new(JSONToken::Colon, None));
+//!
+//! let json_object = Rc::new(Concat::init("json_object"));
+//! let json_value_union = Rc::new(Union::init("json_value_union"));
+//!
+//! let json_object_item = Rc::new(Concat::new(
+//!     "json_object_item",
+//!     vec![
+//!         json_key.clone(),
+//!         hidden_colon.clone(),
+//!         json_value_union.clone(),
+//!     ],
+//! ));
+//!
+//! let json_object_item_node = Rc::new(Node::new(&json_object_item, JSONNode::Item));
+//!
+//! let json_object_item_list =
+//!     Rc::new(SeparatedList::new(&json_object_item_node, &hidden_comma, true).into_nullable());
+//! let json_array_item_list =
+//!     Rc::new(SeparatedList::new(&json_value_union, &hidden_comma, true).into_nullable());
+//!
+//! let json_array_node = Rc::new(
+//!     Concat::new(
+//!         "json_array",
+//!         vec![
+//!             hidden_open_bracket.clone(),
+//!             json_array_item_list.clone(),
+//!             hidden_close_bracket.clone(),
+//!         ],
+//!     )
+//!     .into_node(JSONNode::Array),
+//! );
+//!
+//! let json_object_node = Rc::new(Node::new(&json_object, JSONNode::Object));
+//!
+//! json_value_union
+//!     .set_symbols(vec![
+//!         json_primitive_values.clone(),
+//!         json_object_node.clone(),
+//!         json_array_node.clone(),
+//!     ])
+//!     .unwrap();
+//!
+//! json_object
+//!     .set_symbols(vec![
+//!         hidden_open_brace.clone(),
+//!         json_object_item_list,
+//!         hidden_close_brace.clone(),
+//!     ])
+//!     .unwrap();
+//!
+//! let main = Rc::new(Concat::new("root", vec![json_value_union, eof]));
+//! let main_node = Rc::new(Node::new(&main, JSONNode::Main));
+//!
+//! let parser = DefaultParser::new(Rc::new(tokenizer), main_node).unwrap();
+//! let code_part = r#"{"name":"John", "age":30, "car":null}"#;
+//! let tree_list = parser.parse(code_part.as_bytes()).unwrap();
+//! tree_list[0].print().unwrap();
+//! /*
+//! Main # 0-37
+//! └─ Object # 0-37
+//!    ├─ Item # 1-14
+//!    │  ├─ Key # 1-7
+//!    │  └─ String # 8-14
+//!    ├─ Item # 16-24
+//!    │  ├─ Key # 16-21
+//!    │  └─ Number # 22-24
+//!    └─ Item # 26-36
+//!       ├─ Key # 26-31
+//!       └─ Constant # 32-36
+//!  */
+//!
+//! ```
 mod builder;
 mod non_terminals;
 mod terminals;
@@ -21,9 +202,8 @@ use std::{marker::PhantomData, rc::Rc};
 mod __tests__;
 
 use crate::{
-    util::{Code, Log},
-    ASTNode, CacheKey, FieldTree, FltrPtr, IProduction, NodeImpl, ParsedResult, ProductionError,
-    TokenImpl, TokenPtr, TokenStream,
+    ASTNode, CacheKey, Code, FieldTree, FltrPtr, IProduction, Log, NodeImpl, ParsedResult,
+    ProductionError, TokenImpl, TokenPtr, TokenStream,
 };
 
 /// A terminal symbol which matches a given token with the input.
@@ -85,7 +265,7 @@ pub struct ConstantFieldSet<TN: NodeImpl = u8, TT = i8> {
 /// A null production symbol for the grammar.
 pub struct NullProd<TN: NodeImpl = u8, TL = i8> {
     debugger: OnceCell<Log<&'static str>>,
-    _node: PhantomData<TN>,
+    node_value: Option<TN>,
     _token: PhantomData<TL>,
 }
 
@@ -153,7 +333,7 @@ struct NTHelper {
 ///     vec![id.clone(), operators.clone(), id.clone()],
 /// ));
 ///
-/// let expression_node = Rc::new(Node::new(&expression, Some(NodeValue::Expr)));
+/// let expression_node = Rc::new(Node::new(&expression, NodeValue::Expr));
 ///
 /// let parenthesis_expression = Rc::new(Concat::new(
 ///     "Parenthesis_Expression",
@@ -166,7 +346,7 @@ struct NTHelper {
 ///
 /// let root = Rc::new(Concat::new("main", vec![parenthesis_expression, eof]));
 ///
-/// let root_node = Rc::new(Node::new(&root, Some(NodeValue::Root)));
+/// let root_node = Rc::new(Node::new(&root, NodeValue::Root));
 ///
 /// let parser = LexerlessParser::new(root_node).unwrap();
 ///
@@ -245,7 +425,7 @@ pub struct Concat<TN: NodeImpl = u8, TL: TokenImpl = i8> {
 /// ));
 ///
 /// let main = Rc::new(Concat::new("main", vec![expression, eof]));
-/// let main_node = Rc::new(Node::new(&main, Some(NodeValue::Root)));
+/// let main_node = Rc::new(Node::new(&main, NodeValue::Root));
 ///
 /// let parser = LexerlessParser::new(main_node).unwrap();
 /// let tree_list = parser.parse(b"ax+by").unwrap();
@@ -327,7 +507,7 @@ pub type TSuffixMap<TN, TL> = (Rc<dyn IProduction<Node = TN, Token = TL>>, TN);
 /// ));
 ///
 /// let function_arguments = Rc::new(
-///     SeparatedList::new(&id_or_number, &comma, false).into_node(Some(NodeValue::FuncArgs)),
+///     SeparatedList::new(&id_or_number, &comma, false).into_node(NodeValue::FuncArgs),
 /// );
 ///
 /// let function_call = Rc::new(Concat::new(
@@ -424,7 +604,7 @@ pub struct Suffixes<TP: IProduction> {
 /// );
 ///
 /// let unary_operators_list =
-///     Rc::new(List::new(&unary_operators).into_node(Some(NodeValue::UnaryList)));
+///     Rc::new(List::new(&unary_operators).into_node(NodeValue::UnaryList));
 ///
 /// let expression = Rc::new(
 ///     Concat::new(
@@ -436,9 +616,9 @@ pub struct Suffixes<TP: IProduction> {
 ///             id.clone(),
 ///         ],
 ///     )
-///     .into_node(Some(NodeValue::Expr)),
+///     .into_node(NodeValue::Expr),
 /// );
-/// let root = Rc::new(Concat::new("root", vec![expression, eof]).into_node(Some(NodeValue::Root)));
+/// let root = Rc::new(Concat::new("root", vec![expression, eof]).into_node(NodeValue::Root));
 ///
 /// let parser = LexerlessParser::new(root).unwrap();
 ///
@@ -506,11 +686,11 @@ pub struct List<TProd: IProduction> {
 ///         "ArrayLiteral",
 ///         vec![open_bracket, array_items, close_bracket],
 ///     )
-///     .into_node(Some(NodeValue::Array)),
+///     .into_node(NodeValue::Array),
 /// );
 ///
 /// let main =
-///     Rc::new(Concat::new("main", vec![array_literal, eof]).into_node(Some(NodeValue::Main)));
+///     Rc::new(Concat::new("main", vec![array_literal, eof]).into_node(NodeValue::Main));
 ///
 /// let parser = LexerlessParser::new(main).unwrap();
 ///
@@ -588,7 +768,7 @@ pub struct SeparatedList<TP: IProduction, TS: IProduction<Node = TP::Node, Token
 /// );
 ///
 /// let unary_operators_list =
-///     Rc::new(List::new(&unary_operators).into_node(Some(Token::UnaryList)));
+///     Rc::new(List::new(&unary_operators).into_node(Token::UnaryList));
 ///
 /// let nullable_unary_operator_list = Rc::new(Nullable::new(&unary_operators_list));
 ///
@@ -602,9 +782,9 @@ pub struct SeparatedList<TP: IProduction, TS: IProduction<Node = TP::Node, Token
 ///             id.clone(),
 ///         ],
 ///     )
-///     .into_node(Some(Token::Expr)),
+///     .into_node(Token::Expr),
 /// );
-/// let main = Rc::new(Concat::new("main", vec![expression, eof]).into_node(Some(Token::Main)));
+/// let main = Rc::new(Concat::new("main", vec![expression, eof]).into_node(Token::Main));
 ///
 /// let parser = LexerlessParser::new(main).unwrap();
 ///
@@ -635,7 +815,8 @@ pub struct SeparatedList<TP: IProduction, TS: IProduction<Node = TP::Node, Token
 ///
 /// ```
 pub struct Nullable<TP: IProduction> {
-    production: Rc<TP>,
+    symbol: Rc<TP>,
+    node_value: Option<TP::Node>,
     debugger: OnceCell<Log<&'static str>>,
 }
 
@@ -684,7 +865,7 @@ pub struct Nullable<TP: IProduction> {
 /// ));
 ///
 /// let main = Rc::new(Concat::new("Main", vec![expression.clone(), eof]));
-/// let main_node = Rc::new(Node::new(&main, Some(NodeValue::Main)));
+/// let main_node = Rc::new(Node::new(&main, NodeValue::Main));
 ///
 /// let parser = LexerlessParser::new(main_node).unwrap();
 ///
@@ -696,7 +877,13 @@ pub struct Nullable<TP: IProduction> {
 pub struct Node<TP: IProduction> {
     rule_name: OnceCell<&'static str>,
     production: Rc<TP>,
-    node_value: Option<TP::Node>,
+    node_value: TP::Node,
+    debugger: OnceCell<Log<&'static str>>,
+}
+
+pub struct Hidden<TP: IProduction> {
+    rule_name: OnceCell<&'static str>,
+    production: Rc<TP>,
     debugger: OnceCell<Log<&'static str>>,
 }
 
@@ -764,7 +951,7 @@ pub struct Node<TP: IProduction> {
 ///     Ok(())
 /// }));
 /// let root_node = Rc::new(
-///     Concat::new("main", vec![validated_xml_element, eof]).into_node(Some(NodeValue::Root)),
+///     Concat::new("main", vec![validated_xml_element, eof]).into_node(NodeValue::Root),
 /// );
 ///
 /// let parser = LexerlessParser::new(root_node).unwrap();
@@ -874,7 +1061,7 @@ pub struct Validator<
 /// ));
 ///
 /// let root =
-///     Rc::new(Concat::new("main", vec![var_declaration, eof]).into_node(Some(NodeValue::Root)));
+///     Rc::new(Concat::new("main", vec![var_declaration, eof]).into_node(NodeValue::Root));
 ///
 /// let parser = LexerlessParser::new(root).unwrap();
 ///
@@ -904,7 +1091,7 @@ pub struct Lookahead<TProd: IProduction> {
 }
 
 #[derive(Clone)]
-/// A production utility which makes all its children production to consume input on non filtered token stream.
+/// A production utility which makes child symbol to consume input on non filtered token stream.
 ///
 /// For most of the programing languages like  Javascript, CSS, HTML
 /// it is wise to build a grammar ignoring the non structural elements like
@@ -1069,8 +1256,7 @@ pub struct Lookahead<TProd: IProduction> {
 ///
 /// let hidden_null_white_space = Rc::new(
 ///     TokenField::new(Token::Space, None)
-///         .into_nullable()
-///         .into_node(None),// Will hide all children tree from AST.
+///         .into_null_hidden()
 /// );
 ///
 /// let line_break = Rc::new(TokenField::new(Token::LineBreak, Some(NodeValue::NewLine)));
@@ -1097,12 +1283,12 @@ pub struct Lookahead<TProd: IProduction> {
 ///             statement_termination.clone(),
 ///         ],
 ///     )
-///     .into_node(Some(NodeValue::VarAssignment)),
+///     .into_node(NodeValue::VarAssignment),
 /// );
 /// let list_var_declaration = Rc::new(List::new(&var_declaration));
 ///
 /// let root = Rc::new(
-///     Concat::new("main", vec![list_var_declaration, eof]).into_node(Some(NodeValue::Root)),
+///     Concat::new("main", vec![list_var_declaration, eof]).into_node(NodeValue::Root),
 /// );
 ///
 /// let parser = DefaultParser::new(Rc::new(tokenizer), root).unwrap();
@@ -1136,6 +1322,13 @@ pub struct NonStructural<TProd: IProduction> {
     debugger: OnceCell<Log<&'static str>>,
 }
 
+/// A production utility which makes child symbol to consume input back on filtered token stream. (Not tested)
+///
+pub struct Structural<TProd: IProduction> {
+    production: Rc<TProd>,
+    debugger: OnceCell<Log<&'static str>>,
+}
+
 #[derive(Clone)]
 /// A utility to memorize and use the parsed result at particular positions of code (Packrat parsing technique.)
 ///
@@ -1152,7 +1345,11 @@ pub trait ProductionBuilder: IProduction {
     fn into_list(self) -> List<Self>
     where
         Self: Sized;
-    fn into_node(self, node_value: Option<Self::Node>) -> Node<Self>
+    fn into_node(self, node_value: Self::Node) -> Node<Self>
+    where
+        Self: Sized;
+
+    fn into_hidden(self) -> Hidden<Self>
     where
         Self: Sized;
 
@@ -1175,6 +1372,9 @@ pub trait ProductionBuilder: IProduction {
     where
         Self: Sized;
     fn into_nullable(self) -> Nullable<Self>
+    where
+        Self: Sized;
+    fn into_null_hidden(self) -> Nullable<Self>
     where
         Self: Sized;
     fn validate_with<TF: Fn(&Vec<ASTNode<Self::Node>>, &[u8]) -> Result<(), ProductionError>>(

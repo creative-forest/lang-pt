@@ -60,7 +60,7 @@ Check out the [lexeme](crate::lexeme) API documentation to get overview of the a
 
 ```rust
 use lang_pt::lexeme::{Pattern, Punctuations};
-use lang_pt::util::Code;
+use lang_pt::Code;
 use lang_pt::Lex;
 use lang_pt::{ITokenization, Tokenizer};
 use std::rc::Rc;
@@ -232,7 +232,7 @@ Multiple state-based tokenizer may be required to parse many language syntaxes l
 
 ```rust
 use lang_pt::lexeme::{Action, Mapper, Pattern, Punctuations, StateMixin};
-use lang_pt::util::Code;
+use lang_pt::Code;
 use lang_pt::Lex;
 use lang_pt::TokenImpl;
 use lang_pt::{CombinedTokenizer, ITokenization};
@@ -451,14 +451,14 @@ enum NodeValue {
 }
 ...
 let product = Rc::new(SeparatedList::new(&value, &mul_ops, true)); // The separated should be inclusive i.e. operators should not be at the end of production.
-let product_node = Rc::new(Node::new(&product, Some(NodeValue::Product)));
+let product_node = Rc::new(Node::new(&product, NodeValue::Product));
 let sum = Rc::new(SeparatedList::new(&product_node, &add_ops, false));
-let sum_node = Rc::new(Node::new(&sum, Some(NodeValue::Sum)));
+let sum_node = Rc::new(Node::new(&sum, NodeValue::Sum));
 let semicolon = Rc::new(TokenField::new(Token::Semicolon, None));
 let expression = Rc::new(Concat::new("expression", vec![sum_node.clone(), semicolon]));
-let expr_node = Rc::new(Node::new(&expression, Some(NodeValue::Expr)));
+let expr_node = Rc::new(Node::new(&expression, NodeValue::Expr));
 let root = Rc::new(Concat::new("root", vec![expr_node.clone(), end_of_file]));
-let root_node = Rc::new(Node::new(&root, Some(NodeValue::Root)));
+let root_node = Rc::new(Node::new(&root, NodeValue::Root));
 ...
 let parser = DefaultParser::new(Rc::new(combined_tokenizer), root_node).unwrap();
 let parsed_addition_tree = parser.parse(b"a+b-10;").unwrap();
@@ -513,7 +513,7 @@ let cmp_ops = Rc::new(TokenFieldSet::new(vec![
 // Implementing comparison expression.
 let cmp_expr = Rc::new(SeparatedList::new(&sum_node, &cmp_ops, true));
 
-let cmp_expr_node = Rc::new(Node::new(&cmp_expr, Some(NodeValue::Comparative)));
+let cmp_expr_node = Rc::new(Node::new(&cmp_expr, NodeValue::Comparative));
 
 let semicolon = Rc::new(TokenField::new(Token::Semicolon, None));
 
@@ -587,7 +587,7 @@ Root # 0-17
 
 #### Expression termination
 
-Our current implementation require a semicolon(;) to terminate the javascript expression. However, a Javascript expression can also be termination by eof, close brace (}) or by line break character. We do not want to consume eof or close brace character because they are part of another production. Therefore, we will be implementing Lookahead utility to check if eof or '}' exist immediately after an expression.
+Our current implementation require a semicolon(';') to terminate the javascript expression. However, a Javascript expression can also be terminated by eof, close brace ('}') or by line break character. We do not want to consume eof or close brace character with line termination production because they are part of another production. Therefore, we will be implementing Lookahead utility to check if eof or '}' exist immediately after an expression.
 
 Moreover, a new line character can also indicate a expression termination syntax for the Javascript language. However, is_structural implementation filtered out LineBreak tokens from token stream. Therefore, we will using NonStructural utility to enforce child production to consume unfiltered token stream. The complete production for expression termination is given below.
 
@@ -605,7 +605,7 @@ let hidden_null_white_space = Rc::new(TokenField::new(Token::Space, None).into_n
 let line_break = Rc::new(TokenField::new(Token::LineBreak, None));
 let line_break_seq = Rc::new(
     Concat::new("line_break_seq", vec![hidden_null_white_space, line_break])
-        .into_node(Some(NodeValue::ExprTermination)),
+        .into_node(NodeValue::ExprTermination),
 );
 let expression_termination = Rc::new(Union::new(
     "line_termination",

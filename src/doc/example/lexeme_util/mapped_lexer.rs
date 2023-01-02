@@ -1,6 +1,6 @@
 use crate::{
     lexeme::{Mapper, Pattern},
-    util::Code,
+    Code,
     ITokenization, Lex, TokenImpl, Tokenizer,
 };
 use std::rc::Rc;

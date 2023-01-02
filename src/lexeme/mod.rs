@@ -18,7 +18,7 @@
 //! However, we will be implementing custom types to return as a stream of tokens.
 //!
 //! ```
-//! use lang_pt::util::Code;
+//! use lang_pt::Code;
 //! use lang_pt::{
 //!     lexeme::{Pattern, Punctuations},
 //!     TokenImpl, Tokenizer,
@@ -115,10 +115,7 @@ mod middleware;
 mod mixin;
 mod pattern;
 mod punctuation;
-use crate::{
-    util::{Code, Log},
-    FieldTree, ILexeme, Lex,
-};
+use crate::{Code, FieldTree, ILexeme, Lex, Log};
 use once_cell::unsync::OnceCell;
 use regex::bytes::Regex;
 use std::{collections::HashMap, fmt::Debug, marker::PhantomData};
@@ -186,7 +183,7 @@ pub enum Action<T> {
 ///
 /// # Example
 /// ```
-/// use lang_pt::{lexeme::Pattern, util::Code, ITokenization, Lex, TokenImpl, Tokenizer};
+/// use lang_pt::{lexeme::Pattern, Code, ITokenization, Lex, TokenImpl, Tokenizer};
 /// use std::rc::Rc;
 /// #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 /// enum Token {
@@ -230,7 +227,7 @@ pub struct Pattern<TToken, TState = u8> {
 /// ```
 /// use lang_pt::{
 ///     lexeme::{Pattern, Punctuations},
-///     util::Code,
+///     Code,
 ///     ITokenization, Lex, TokenImpl, Tokenizer,
 /// };
 /// use std::rc::Rc;
@@ -317,7 +314,7 @@ pub struct Constants<TToken, TState = u8> {
 /// ```
 /// use lang_pt::{
 ///     lexeme::{Mapper, Pattern},
-///     util::Code,
+///     Code,
 ///     ITokenization, Lex, TokenImpl, Tokenizer,
 /// };
 /// use std::rc::Rc;
@@ -391,7 +388,7 @@ pub struct Mapper<TLexer: ILexeme> {
 /// ```
 /// use lang_pt::{
 ///     lexeme::{Pattern, ThunkMapper},
-///     util::Code,
+///     Code,
 ///     ITokenization, Lex, TokenImpl, Tokenizer,
 /// };
 /// use std::{io::BufRead, rc::Rc};
@@ -453,7 +450,7 @@ pub struct ThunkMapper<
 /// ```
 /// use lang_pt::{
 ///     lexeme::{Middleware, Pattern, Punctuations},
-///     util::Code,
+///     Code,
 ///     ITokenization, Lex, TokenImpl, Tokenizer,
 /// };
 /// use std::rc::Rc;
@@ -544,7 +541,7 @@ pub struct Middleware<TLexeme: ILexeme, TMiddleware: Fn(&[u8], &Vec<Lex<TLexeme:
 /// ```
 /// use lang_pt::{
 ///     lexeme::{Action, Pattern, Punctuations, StateMixin},
-///     util::Code,
+///     Code,
 ///     CombinedTokenizer, ITokenization, Lex, TokenImpl,
 /// };
 /// use std::rc::Rc;
@@ -657,7 +654,7 @@ pub struct StateMixin<TLexeme: ILexeme> {
 /// ```
 /// use lang_pt::{
 ///     lexeme::{Action, Pattern, Punctuations, ThunkStateMixin},
-///     util::Code,
+///     Code,
 ///     ITokenization, Lex, TokenImpl, Tokenizer,
 /// };
 /// use std::rc::Rc;

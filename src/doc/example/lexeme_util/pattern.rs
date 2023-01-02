@@ -1,4 +1,4 @@
-use crate::{lexeme::Pattern, util::Code, ITokenization, Lex, TokenImpl, Tokenizer};
+use crate::{lexeme::Pattern, Code, ITokenization, Lex, TokenImpl, Tokenizer};
 use std::rc::Rc;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

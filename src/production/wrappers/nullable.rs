@@ -1,8 +1,9 @@
+use crate::NodeImpl;
 use crate::{
     production::{Nullable, ProductionLogger},
-    util::Code,
-    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, TokenPtr,
-    SuccessData, TokenStream,
+    Code,
+    ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, SuccessData, TokenPtr,
+    TokenStream,
 };
 use once_cell::unsync::OnceCell;
 use std::{
@@ -12,21 +13,39 @@ use std::{
 };
 
 impl<TProd: IProduction> Nullable<TProd> {
-    pub fn new(production: &Rc<TProd>) -> Self {
+    /// Create a nullable production i.e. add a null production as alternative production.
+    ///
+    /// The null derivation create a tree with [null](NodeImpl::null) node value in the [ASTNode].
+    /// ## Arguments
+    /// * 'symbol' - A terminal or non terminal symbol.
+    pub fn new(symbol: &Rc<TProd>) -> Self {
         Self {
-            production: production.clone(),
+            symbol: symbol.clone(),
             debugger: OnceCell::new(),
+            node_value: Some(TProd::Node::null()),
+        }
+    }
+    /// Create a nullable production.
+    ///
+    /// The null derivation does not create any tree node in the [ASTNode].
+    /// ## Arguments
+    /// * 'symbol' - A terminal or non terminal symbol.
+    pub fn hidden(production: &Rc<TProd>) -> Self {
+        Self {
+            symbol: production.clone(),
+            debugger: OnceCell::new(),
+            node_value: None,
         }
     }
 
     #[inline]
     pub fn get_production(&self) -> &TProd {
-        &self.production
+        &self.symbol
     }
 }
 
 impl<TP: IProduction> Nullable<TP> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn set_log(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -34,7 +53,7 @@ impl<TP: IProduction> Nullable<TP> {
 }
 
 impl<TProd: IProduction> ProductionLogger for Nullable<TProd> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }
@@ -91,46 +110,68 @@ impl<TProd: IProduction> IProduction for Nullable<TProd> {
         token_stream: &TokenStream<Self::Token>,
         cached: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<FltrPtr, Self::Node> {
-        match self
+        let result = self
             .get_production()
             .advance_fltr_ptr(code, index, token_stream, cached)
-        {
-            Ok(success_data) => Ok(success_data),
-            Err(err) => {
+            .or_else(|err| {
                 if err.is_invalid() {
                     Err(err)
                 } else {
-                    let pointer_start = token_stream.pointer(index);
-                    let tree =
-                        ASTNode::null(pointer_start, Some(token_stream.get_stream_ptr(index)));
-                    Ok(SuccessData::tree(index, tree))
+                    match &self.node_value {
+                        Some(node_value) => {
+                            let pointer_start = token_stream.pointer(index);
+                            let bound = token_stream.get_token_ptr(index);
+                            let tree = ASTNode::leaf(
+                                node_value.clone(),
+                                pointer_start,
+                                pointer_start,
+                                Some((bound, bound)),
+                            );
+                            Ok(SuccessData::tree(index, tree))
+                        }
+                        None => Ok(SuccessData::hidden(index)),
+                    }
                 }
-            }
-        }
+            });
+
+        #[cfg(debug_assertions)]
+        self.log_filtered_result(code, index, token_stream, &result);
+        result
     }
 
     fn advance_token_ptr(
         &self,
         code: &Code,
-        index: TokenPtr,
-        stream: &TokenStream<Self::Token>,
+        token_ptr: TokenPtr,
+        token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<TokenPtr, Self::Node> {
-        match self
+        let result = self
             .get_production()
-            .advance_token_ptr(code, index, stream, cache)
-        {
-            Ok(success_data) => Ok(success_data),
-            Err(err) => {
+            .advance_token_ptr(code, token_ptr, token_stream, cache)
+            .or_else(|err| {
                 if err.is_invalid() {
                     Err(err)
                 } else {
-                    let pointer_start = stream[index].start;
-                    let tree = ASTNode::null(pointer_start, Some(index));
-                    Ok(SuccessData::tree(index, tree))
+                    match &self.node_value {
+                        Some(node_value) => {
+                            let pointer_start = token_stream[token_ptr].start;
+                            let tree = ASTNode::leaf(
+                                node_value.clone(),
+                                pointer_start,
+                                pointer_start,
+                                Some((token_ptr, token_ptr)),
+                            );
+                            Ok(SuccessData::tree(token_ptr, tree))
+                        }
+                        None => Ok(SuccessData::hidden(token_ptr)),
+                    }
                 }
-            }
-        }
+            });
+
+        #[cfg(debug_assertions)]
+        self.log_lex_result(code, token_ptr, token_stream, &result);
+        result
     }
 
     fn advance_ptr(
@@ -139,16 +180,24 @@ impl<TProd: IProduction> IProduction for Nullable<TProd> {
         index: usize,
         cache: &mut Cache<usize, Self::Node>,
     ) -> ParsedResult<usize, Self::Node> {
-        match self.get_production().advance_ptr(code, index, cache) {
-            Ok(success_data) => Ok(success_data),
-            Err(err) => {
+        let result = self
+            .get_production()
+            .advance_ptr(code, index, cache)
+            .or_else(|err| {
                 if err.is_invalid() {
                     Err(err)
                 } else {
-                    let tree = ASTNode::null(index, None);
-                    Ok(SuccessData::tree(index, tree))
+                    match &self.node_value {
+                        Some(node_value) => {
+                            let tree = ASTNode::leaf(node_value.clone(), index, index, None);
+                            Ok(SuccessData::tree(index, tree))
+                        }
+                        None => Ok(SuccessData::hidden(index)),
+                    }
                 }
-            }
-        }
+            });
+        #[cfg(debug_assertions)]
+        self.log_result(code, index, &result);
+        result
     }
 }

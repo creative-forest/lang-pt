@@ -224,20 +224,20 @@ fn flatten() {
 
     let product = Rc::new(SeparatedList::new(&value, &mul_ops, true)); // The separated should be inclusive i.e. operators should not be at the end of production.
 
-    let product_node = Rc::new(Node::new(&product, Some(NodeValue::Product)));
+    let product_node = Rc::new(Node::new(&product, NodeValue::Product));
 
     let sum = Rc::new(SeparatedList::new(&product_node, &add_ops, false));
 
-    let sum_node = Rc::new(Node::new(&sum, Some(NodeValue::Sum)));
+    let sum_node = Rc::new(Node::new(&sum, NodeValue::Sum));
 
     let semicolon = Rc::new(TokenField::new(Token::Semicolon, None));
 
     let expression = Rc::new(Concat::new("expression", vec![sum_node.clone(), semicolon]));
 
-    let expr_node = Rc::new(Node::new(&expression, Some(NodeValue::Expr)));
+    let expr_node = Rc::new(Node::new(&expression, NodeValue::Expr));
 
     let root = Rc::new(Concat::new("root", vec![expr_node.clone(), end_of_file]));
-    let root_node = Rc::new(Node::new(&root, Some(NodeValue::Root)));
+    let root_node = Rc::new(Node::new(&root, NodeValue::Root));
     // Setting thr production for parenthesis_expr.
 
     let open_paren = Rc::new(TokenField::new(Token::OpenParen, None));

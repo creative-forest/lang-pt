@@ -189,6 +189,7 @@
 //! [lang_pt](crate) is provided under the MIT license. See [LICENSE](../LICENSE).
 mod ast_node;
 mod cache;
+mod code;
 mod doc;
 mod error;
 pub mod examples;
@@ -197,18 +198,19 @@ mod filtered_stream;
 mod impl_default;
 mod lex;
 pub mod lexeme;
+mod logger;
 mod parsing;
+mod position;
 pub mod production;
 mod success_data;
 mod tokenization;
-pub mod util;
 mod wrapper_index;
+
 use once_cell::unsync::OnceCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display, Write};
 use std::hash::Hash;
 use std::rc::Rc;
-use util::{Code, Log};
 
 /// A trait implementation to generate default tokens to assign token values to the associated [ASTNode].
 ///
@@ -346,7 +348,7 @@ pub struct TokenStream<'lex, TNode> {
 pub struct FltrPtr(usize);
 
 #[derive(Debug, Clone)]
-/// A [Ok] result value returned from the [Production](IProduction) when it successfully  [consume](IProduction::eat_token_ptr()) inputs.
+/// A [Ok] result value returned from the [Production](IProduction) when it successfully  [consume](IProduction::advance_token_ptr()) inputs.
 pub struct SuccessData<I, TNode> {
     pub consumed_index: I,
     pub children: Vec<ASTNode<TNode>>,
@@ -356,7 +358,7 @@ pub struct SuccessData<I, TNode> {
 ///  An unique key to save and retrieve parsed result for Packrat parsing technique.
 pub struct CacheKey(usize);
 
-/// A result returned from [Production](IProduction) when it try to [consume][IProduction::eat_token_ptr] inputs.
+/// A result returned from [Production](IProduction) when it try to [consume][IProduction::advance_token_ptr] inputs.
 pub type ParsedResult<I, TToken> = Result<SuccessData<I, TToken>, ProductionError>;
 
 /// A object structure to store maximum successful parse position and parsed result for Packrat parsing technique.   
@@ -441,4 +443,25 @@ pub struct LexerlessParser<TN: NodeImpl = u8, TL: TokenImpl = i8> {
 struct FieldTree<T> {
     token: Option<T>,
     children: Vec<(u8, FieldTree<T>)>,
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub struct Position {
+    pub line: usize,
+    pub column: usize,
+}
+
+pub struct Code<'c> {
+    pub value: &'c [u8],
+    line_breaks: OnceCell<Vec<usize>>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+/// A enum structure to assign multiple level debugging to lexeme and production utilities.
+pub enum Log<T> {
+    None,
+    Default(T),
+    Success(T),
+    Result(T),
+    Verbose(T),
 }

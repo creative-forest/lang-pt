@@ -1,6 +1,6 @@
 use crate::{
     production::{Lookahead, ProductionLogger},
-    util::Code,
+    Code,
     ASTNode, Cache, FltrPtr, IProduction, ImplementationError, ParsedResult, TokenPtr,
     SuccessData, TokenStream,
 };
@@ -32,7 +32,7 @@ impl<TProd: IProduction> Lookahead<TProd> {
 }
 
 impl<TP: IProduction> Lookahead<TP> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -40,7 +40,7 @@ impl<TP: IProduction> Lookahead<TP> {
 }
 
 impl<TProd: IProduction> ProductionLogger for Lookahead<TProd> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }
@@ -105,7 +105,7 @@ impl<TProd: IProduction> IProduction for Lookahead<TProd> {
             .map(|_| match &self.node_value {
                 Some(node) => {
                     let pointer = token_stream[index].start;
-                    let segment_index = token_stream.get_stream_ptr(index);
+                    let segment_index = token_stream.get_token_ptr(index);
                     SuccessData::new(
                         index,
                         vec![ASTNode::new(

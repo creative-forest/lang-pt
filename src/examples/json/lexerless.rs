@@ -98,7 +98,7 @@ pub fn json_lexerless_grammar() -> LexerlessParser<JSONNode> {
         ],
     ));
 
-    let json_object_item_node = Rc::new(Node::new(&json_object_item, Some(JSONNode::Item)));
+    let json_object_item_node = Rc::new(Node::new(&json_object_item, JSONNode::Item));
 
     let json_object_item_list = Rc::new(SeparatedList::new(
         &json_object_item_node,
@@ -123,9 +123,9 @@ pub fn json_lexerless_grammar() -> LexerlessParser<JSONNode> {
         ],
     ));
 
-    let json_array_node = Rc::new(Node::new(&json_array, Some(JSONNode::Array)));
+    let json_array_node = Rc::new(Node::new(&json_array, JSONNode::Array));
 
-    let json_object_node = Rc::new(Node::new(&json_object, Some(JSONNode::Object)));
+    let json_object_node = Rc::new(Node::new(&json_object, JSONNode::Object));
 
     json_value_union
         .set_symbols(vec![
@@ -157,7 +157,7 @@ pub fn json_lexerless_grammar() -> LexerlessParser<JSONNode> {
                 eof,
             ],
         )
-        .into_node(Some(JSONNode::Main)),
+        .into_node(JSONNode::Main),
     );
 
     let parser = LexerlessParser::new(main_node).unwrap();

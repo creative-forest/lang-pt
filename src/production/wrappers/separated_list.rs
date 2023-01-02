@@ -1,6 +1,6 @@
 use crate::production::ProductionLogger;
 use crate::{
-    production::SeparatedList, util::Code, Cache, FltrPtr, IProduction, ImplementationError,
+    production::SeparatedList, Code, Cache, FltrPtr, IProduction, ImplementationError,
     ParsedResult, TokenPtr, SuccessData, TokenStream,
 };
 use once_cell::unsync::OnceCell;
@@ -90,7 +90,7 @@ impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> Separ
 }
 
 impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> SeparatedList<TP, TS> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -100,7 +100,7 @@ impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> Separ
 impl<TP: IProduction, TS: IProduction<Node = TP::Node, Token = TP::Token>> ProductionLogger
     for SeparatedList<TP, TS>
 {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }

@@ -1,6 +1,6 @@
 use crate::production::ProductionLogger;
-use crate::{production::NonStructural, Code, Cache, FltrPtr, IProduction, TokenStream};
-use crate::{ImplementationError, ParsedResult, ProductionError, TokenPtr, SuccessData};
+use crate::{production::Structural, Cache, Code, FltrPtr, IProduction, TokenStream};
+use crate::{ImplementationError, ParsedResult, SuccessData, TokenPtr};
 use once_cell::unsync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
@@ -8,16 +8,13 @@ use std::{
     rc::Rc,
 };
 
-impl<TProd: IProduction> NonStructural<TProd> {
-
-    /// Create a new [NonStructural] production utility.
-    /// ### Arguments 
+impl<TProd: IProduction> Structural<TProd> {
+    /// Create a new [Structural] production utility.
+    /// ### Arguments
     /// * `symbol` - A terminal or non terminal symbol.
-    /// * `shall_fill_range` - A [bool] value to indicate whether it is required to consume all non structural tokens.
-    pub fn new(symbol: &Rc<TProd>, shall_fill_range: bool) -> Self {
+    pub fn new(symbol: &Rc<TProd>) -> Self {
         Self {
             production: symbol.clone(),
-            fill_range: shall_fill_range,
             debugger: OnceCell::new(),
         }
     }
@@ -28,7 +25,7 @@ impl<TProd: IProduction> NonStructural<TProd> {
     }
 }
 
-impl<TP: IProduction> NonStructural<TP> {
+impl<TP: IProduction> Structural<TP> {
     /// Set a [Log](crate::Log) to debug the production.
     pub fn set_log(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
@@ -37,18 +34,18 @@ impl<TP: IProduction> NonStructural<TP> {
     }
 }
 
-impl<TProd: IProduction> ProductionLogger for NonStructural<TProd> {
+impl<TProd: IProduction> ProductionLogger for Structural<TProd> {
     fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }
 
-impl<TProd: IProduction> Display for NonStructural<TProd> {
+impl<TProd: IProduction> Display for Structural<TProd> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "%{}%", self.get_symbol())
     }
 }
-impl<TProd: IProduction> IProduction for NonStructural<TProd> {
+impl<TProd: IProduction> IProduction for Structural<TProd> {
     type Node = TProd::Node;
     type Token = TProd::Token;
 
@@ -94,29 +91,9 @@ impl<TProd: IProduction> IProduction for NonStructural<TProd> {
         token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<FltrPtr, Self::Node> {
-        #[cfg(debug_assertions)]
-        self.log_entry();
-
-        let start_segment = if fltr_ptr > FltrPtr::default() {
-            token_stream.get_token_ptr(fltr_ptr - 1)
-        } else {
-            TokenPtr::default()
-        };
-
-        let parsed_data =
-            self.get_symbol()
-                .advance_token_ptr(code, start_segment + 1, token_stream, cache)?;
-
-        let result = if self.fill_range {
-            let end_segment = token_stream.get_token_ptr(fltr_ptr);
-            if end_segment == parsed_data.consumed_index {
-                Ok(SuccessData::new(fltr_ptr, parsed_data.children))
-            } else {
-                Err(ProductionError::Unparsed)
-            }
-        } else {
-            Ok(SuccessData::new(fltr_ptr, parsed_data.children))
-        };
+        let result = self
+            .get_symbol()
+            .advance_fltr_ptr(code, fltr_ptr, token_stream, cache);
 
         #[cfg(debug_assertions)]
         self.log_filtered_result(code, fltr_ptr, token_stream, &result);
@@ -128,11 +105,35 @@ impl<TProd: IProduction> IProduction for NonStructural<TProd> {
         &self,
         code: &Code,
         index: TokenPtr,
-        stream: &TokenStream<Self::Token>,
+        token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<TokenPtr, Self::Node> {
-        self.get_symbol()
-            .advance_token_ptr(code, index, stream, cache)
+        #[cfg(debug_assertions)]
+        self.log_entry();
+
+        let next_fltr_ptr = match token_stream.find_filter_ptr(index) {
+            Ok(fp) => fp + 1,
+            Err(fp) => fp,
+        };
+
+        let parsed_data =
+            self.get_symbol()
+                .advance_fltr_ptr(code, next_fltr_ptr, token_stream, cache)?;
+
+        #[cfg(debug_assertions)]
+        self.log_success(
+            code,
+            token_stream[index].start,
+            token_stream[parsed_data.consumed_index].start,
+        );
+
+        let last_token_ptr = if parsed_data.consumed_index > FltrPtr::default() {
+            token_stream.get_token_ptr(parsed_data.consumed_index - 1)
+        } else {
+            TokenPtr::default()
+        };
+
+        Ok(SuccessData::new(last_token_ptr + 1, parsed_data.children))
     }
 
     fn advance_ptr(

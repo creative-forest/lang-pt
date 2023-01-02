@@ -51,9 +51,8 @@ fn suffixes_test() {
         ],
     ));
 
-    let function_arguments = Rc::new(
-        SeparatedList::new(&id_or_number, &comma, false).into_node(Some(NodeValue::FuncArgs)),
-    );
+    let function_arguments =
+        Rc::new(SeparatedList::new(&id_or_number, &comma, false).into_node(NodeValue::FuncArgs));
 
     let function_call = Rc::new(Concat::new(
         "FunctionCall",

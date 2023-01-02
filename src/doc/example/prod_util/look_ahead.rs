@@ -78,8 +78,7 @@ fn nullable_test() {
         ],
     ));
 
-    let root =
-        Rc::new(Concat::new("main", vec![var_declaration, eof]).into_node(Some(NodeValue::Root)));
+    let root = Rc::new(Concat::new("main", vec![var_declaration, eof]).into_node(NodeValue::Root));
 
     let parser = LexerlessParser::new(root).unwrap();
 

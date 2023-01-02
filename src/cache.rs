@@ -1,4 +1,4 @@
-use crate::util::Code;
+use crate::Code;
 use crate::{
     Cache, CacheKey, FltrPtr, NodeImpl, ParseError, ParsedResult, ProductionError, TokenImpl,
     TokenStream,

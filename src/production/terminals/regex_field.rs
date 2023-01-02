@@ -9,7 +9,7 @@ use regex::bytes::Regex;
 
 use crate::{
     production::{ProductionLogger, RegexField},
-    util::Code,
+    Code,
     ASTNode, Cache, FltrPtr, IProduction, ImplementationError, NodeImpl, ParsedResult,
     ProductionError, TokenPtr, SuccessData, TokenImpl, TokenStream,
 };
@@ -30,7 +30,7 @@ impl<TN: NodeImpl> RegexField<TN, i8> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> RegexField<TN, TL> {
-    pub fn assign_debugger(&self, debugger: crate::util::Log<&'static str>) -> Result<(), String> {
+    pub fn assign_debugger(&self, debugger: crate::Log<&'static str>) -> Result<(), String> {
         self.debugger
             .set(debugger)
             .map_err(|err| format!("Debugger {} is already set for this production.", err))
@@ -38,7 +38,7 @@ impl<TN: NodeImpl, TL: TokenImpl> RegexField<TN, TL> {
 }
 
 impl<TN: NodeImpl, TL: TokenImpl> ProductionLogger for RegexField<TN, TL> {
-    fn get_debugger(&self) -> Option<&crate::util::Log<&'static str>> {
+    fn get_debugger(&self) -> Option<&crate::Log<&'static str>> {
         self.debugger.get()
     }
 }

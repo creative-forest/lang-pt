@@ -1,4 +1,4 @@
-use crate::{ASTNode, FltrPtr, Lex, NodeImpl, TokenPtr, SuccessData, TokenImpl, TokenStream};
+use crate::{ASTNode, FltrPtr, Lex, NodeImpl, SuccessData, TokenImpl, TokenPtr, TokenStream};
 use std::ops::Index;
 
 impl<'lex, TNode> TokenStream<'lex, TNode> {
@@ -46,8 +46,8 @@ impl<'lex, TToken> TokenStream<'lex, TToken> {
             self.pointer(index),
             self.pointer(data.consumed_index),
             Some((
-                self.get_stream_ptr(index),
-                self.get_stream_ptr(data.consumed_index),
+                self.get_token_ptr(index),
+                self.get_token_ptr(data.consumed_index),
             )),
             data.children,
         );
@@ -141,8 +141,14 @@ impl<'lex, TToken> TokenStream<'lex, TToken> {
             .collect()
     }
 
-    pub fn get_stream_ptr(&self, index: FltrPtr) -> TokenPtr {
+    pub fn get_token_ptr(&self, index: FltrPtr) -> TokenPtr {
         self.filtered_stream[index.0]
+    }
+    pub fn find_filter_ptr(&self, index: TokenPtr) -> Result<FltrPtr, FltrPtr> {
+        match self.filtered_stream.binary_search(&index) {
+            Ok(i) => Ok(FltrPtr(i)),
+            Err(i) => Ok(FltrPtr(i)),
+        }
     }
     pub fn last_segment_index(&self, lex_index: &FltrPtr) -> Option<TokenPtr> {
         if lex_index.0 > 0 {

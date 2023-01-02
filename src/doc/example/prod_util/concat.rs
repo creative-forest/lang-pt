@@ -43,7 +43,7 @@ pub fn concat_test() {
         vec![id.clone(), operators.clone(), id.clone()],
     ));
 
-    let expression_node = Rc::new(Node::new(&expression, Some(NodeValue::Expr)));
+    let expression_node = Rc::new(Node::new(&expression, NodeValue::Expr));
 
     let parenthesis_expression = Rc::new(Concat::new(
         "Parenthesis_Expression",
@@ -56,7 +56,7 @@ pub fn concat_test() {
 
     let root = Rc::new(Concat::new("main", vec![parenthesis_expression, eof]));
 
-    let root_node = Rc::new(Node::new(&root, Some(NodeValue::Root)));
+    let root_node = Rc::new(Node::new(&root, NodeValue::Root));
 
     let parser = LexerlessParser::new(root_node).unwrap();
 

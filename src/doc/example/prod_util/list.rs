@@ -46,8 +46,7 @@ fn list_test() {
 
     let unary_operators_list = Rc::new(List::new(&unary_operators));
 
-    let unary_operator_list_node =
-        Rc::new(Node::new(&unary_operators_list, Some(NodeValue::UnaryList)));
+    let unary_operator_list_node = Rc::new(Node::new(&unary_operators_list, NodeValue::UnaryList));
 
     let expression = Rc::new(
         Concat::new(
@@ -59,9 +58,9 @@ fn list_test() {
                 id.clone(),
             ],
         )
-        .into_node(Some(NodeValue::Expr)),
+        .into_node(NodeValue::Expr),
     );
-    let root = Rc::new(Concat::new("root", vec![expression, eof]).into_node(Some(NodeValue::Root)));
+    let root = Rc::new(Concat::new("root", vec![expression, eof]).into_node(NodeValue::Root));
 
     let parser = LexerlessParser::new(root).unwrap();
 
