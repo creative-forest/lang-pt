@@ -9,8 +9,8 @@ license-file = "LICENSE"
 keywords = [
     "parser", 
     "tokenizer",
-    "recursive-descent-parser",
-    "top-down-parser"
+    "recursive-descent",
+    "top-down"
 ] 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
