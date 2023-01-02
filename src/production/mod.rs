@@ -1,4 +1,4 @@
-//! A module consist of production utilities which are helper utilities to write grammar for the parser.
+//! A module consists of production utilities which are helper utilities to write the grammar for the parser.
 //!
 //! Each production utility represent a defined rule of operation for a set symbols.
 //! As an example, non terminal production utility [Concat], represents concatenation associated symbols,
@@ -233,7 +233,7 @@ pub struct RegexField<TN: NodeImpl = u8, TT = i8> {
 
 /// A terminal symbol which matches the provided value with the input.
 ///
-/// This symbol can be used while using a lexerless parsing.
+/// This symbol can only be used while using a lexerless parsing.
 pub struct ConstantField<TN: NodeImpl = u8, TT = i8> {
     value: Vec<u8>,
     node_value: Option<TN>,
@@ -243,7 +243,7 @@ pub struct ConstantField<TN: NodeImpl = u8, TT = i8> {
 
 /// A terminal symbol which matches a set of punctuation field with the input.
 ///
-/// This symbol can be used while using a lexerless parsing.
+/// This symbol can only be used while using a lexerless parsing.
 pub struct PunctuationsField<TN: NodeImpl = u8, TT = i8> {
     tree: FieldTree<Option<TN>>,
     rule_name: OnceCell<&'static str>,
@@ -1330,7 +1330,7 @@ pub struct Structural<TProd: IProduction> {
 }
 
 #[derive(Clone)]
-/// A utility to memorize and use the parsed result at particular positions of code (Packrat parsing technique.)
+/// An utility to memorize and use the parsed result at particular positions of code (Packrat parsing technique.)
 ///
 /// This wrapper utility will first look for memorize parsed result for the associated production at the particular pointer location.
 /// If the parsed result is not available at the particular location it will then obtain the parsed result for the associated production and also save it to memory.

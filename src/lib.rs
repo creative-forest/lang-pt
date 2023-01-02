@@ -235,7 +235,7 @@ pub trait NodeImpl: Debug + Clone {
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
-/// A wrapper to indicate the indices of the tokenized data in the [TokenStream].
+/// A wrapper to indicate the index of the tokenized data in the [TokenStream].
 pub struct TokenPtr(usize);
 
 #[derive(Clone)]
@@ -274,7 +274,7 @@ pub trait ILexeme {
     fn get_grammar_field(&self) -> Vec<(Self::Token, String)>;
 }
 
-/// A trait consist of [tokenize](ITokenization::tokenize) method which take input utf-8 string bytes and produce tokens stream.
+/// A trait consists of [tokenize](ITokenization::tokenize) method which takes input utf-8 string bytes and produces a tokens stream.
 ///
 /// This interface implemented by [Tokenizer] and [CombinedTokenizer].
 pub trait ITokenization {
@@ -286,25 +286,25 @@ pub trait ITokenization {
 /// Base tokenization structure for lexical analysis.
 ///
 /// The [Tokenizer] implements [ITokenization] where the [tokenize](ITokenization::tokenize) method
-/// from this trait will split the input string into token stream and return the result.
-/// The [Tokenizer] object consist of lexeme utilities.
-/// During tokenization each lexeme utility will be called sequentially to get splitted token of the input.
+/// from this trait will split the input string into a token stream and return the result.
+/// The [Tokenizer] object consists of lexeme utilities.
+/// During tokenization, each lexeme utility will be called sequentially to get split tokens input.
 ///
 pub struct Tokenizer<TToken = i8, TState = u8> {
     lexers: Vec<Rc<dyn ILexeme<Token = TToken, State = TState>>>,
 }
 
-/// A state based lexical analyzer.
+/// A state-based tokenizer for lexical analysis.
 ///
-/// A [CombinedTokenizer] consist of multiple set of lexeme utilities for multiple state.
-/// During tokenization lexeme utilities corresponding to the state will be called sequentially to get splitted token of the input.
+/// A [CombinedTokenizer] consist of multiple set of lexeme utilities.
+/// During tokenization lexeme utilities corresponding to the state will be called sequentially to get split tokens input.
 /// A [StateMixin][crate::lexeme::StateMixin] or [ThunkStateMixin][crate::lexeme::ThunkStateMixin] can be used with to change the state stack during tokenization.
 ///  
-/// To tokenize a complex language syntax like template literal in javascript,
-/// it is intuitive to implement separate state for template literal which will be responsible only to tokenize template literal part of the input string.
-/// Thus, a [CombinedTokenizer] allows us to define a multiple states based lexer required to tokenize relatively complex language syntax.  
+/// Tokenizing a complex language syntax like template literal in javascript,
+/// required implementing a separate state to tokenize template the literal part of the input.
+/// Thus, a [CombinedTokenizer] allows us to define a multiple states-based lexer required to tokenize relatively complex language syntax.  
 /// Similar to the [Tokenizer] a [CombinedTokenizer] also implements [ITokenization]
-/// where, the [tokenize](ITokenization::tokenize) method will split the input string into stream of tokens.
+/// where the [tokenize](ITokenization::tokenize) method will split the input string into a stream of tokens.
 ///
 pub struct CombinedTokenizer<TT = i8, TS = u8> {
     analyzers: Vec<(TS, Vec<Rc<dyn ILexeme<Token = TT, State = TS>>>)>,
@@ -330,7 +330,7 @@ pub enum ProductionError {
 }
 
 #[derive(Debug)]
-/// An error returned when parser failed to parse the input because of language syntax error.
+/// An error returned when the parser failed to parse the input because of the language syntax error.
 pub struct ParseError {
     pub pointer: usize,
     pub message: String,
@@ -348,20 +348,21 @@ pub struct TokenStream<'lex, TNode> {
 pub struct FltrPtr(usize);
 
 #[derive(Debug, Clone)]
-/// A [Ok] result value returned from the [Production](IProduction) when it successfully  [consume](IProduction::advance_token_ptr()) inputs.
+/// A [Ok] result value returned from the [production](IProduction) utility
+/// when it successfully consume production [derivation](IProduction::advance_token_ptr()).
 pub struct SuccessData<I, TNode> {
     pub consumed_index: I,
     pub children: Vec<ASTNode<TNode>>,
 }
 
 #[derive(Hash, PartialEq, Eq, Clone, Copy, PartialOrd, Ord)]
-///  An unique key to save and retrieve parsed result for Packrat parsing technique.
+///  A unique key to save and retrieve parsed results for the Packrat parsing technique.
 pub struct CacheKey(usize);
 
 /// A result returned from [Production](IProduction) when it try to [consume][IProduction::advance_token_ptr] inputs.
 pub type ParsedResult<I, TToken> = Result<SuccessData<I, TToken>, ProductionError>;
 
-/// A object structure to store maximum successful parse position and parsed result for Packrat parsing technique.   
+/// An object structure to store maximum successful parse position and parsed result for Packrat parsing technique.   
 pub struct Cache<TP, TToken> {
     parsed_result_cache: HashMap<(CacheKey, usize), ParsedResult<TP, TToken>>,
     max_parsed_point: usize,
@@ -371,8 +372,13 @@ pub struct Cache<TP, TToken> {
 pub trait IProduction: Display {
     type Node: NodeImpl;
     type Token: TokenImpl;
+    /// Whether the production is nullable.
     fn is_nullable(&self) -> bool;
+
+    /// Whether the production is nullable and the parsed tree should be hidden from the [ASTNode].
     fn is_nullable_n_hidden(&self) -> bool;
+
+    /// Validate if any first set child production is left recursive and return id production is nullable.
     fn obtain_nullability<'id>(
         &'id self,
         visited: HashMap<&'id str, usize>,
@@ -381,26 +387,30 @@ pub trait IProduction: Display {
     fn impl_first_set(&self, first_set: &mut HashSet<Self::Token>);
     // fn has_first_set(&self, lex_index: LexIndex, stream: &LexStream<Self::Token>) -> bool;
 
+    /// Write grammar for the production.
     fn impl_grammar(
         &self,
         writer: &mut dyn Write,
         added_rules: &mut HashSet<&'static str>,
     ) -> Result<(), std::fmt::Error>;
 
+    /// Validate this and all children production for left recursion.
     fn validate<'id>(
         &'id self,
         connected_sets: HashMap<&'id str, usize>,
         visited_prod: &mut HashSet<&'id str>,
     ) -> Result<(), ImplementationError>;
 
+    /// Consume input in filtered token stream.
     fn advance_fltr_ptr(
         &self,
         code: &Code,
         index: FltrPtr,
-        stream: &TokenStream<Self::Token>,
+        token_stream: &TokenStream<Self::Token>,
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<FltrPtr, Self::Node>;
 
+    /// Consume tokenized input data.
     fn advance_token_ptr(
         &self,
         code: &Code,
@@ -409,6 +419,7 @@ pub trait IProduction: Display {
         cache: &mut Cache<FltrPtr, Self::Node>,
     ) -> ParsedResult<TokenPtr, Self::Node>;
 
+    /// Consume a utf-8 byte string input.
     fn advance_ptr(
         &self,
         code: &Code,
@@ -424,7 +435,7 @@ pub trait IProduction: Display {
     }
 }
 
-/// A parser structure to construct a tokenized based parsing.
+/// A parser structure to construct a tokenized based parsing program.
 pub struct DefaultParser<TN: NodeImpl = u8, TL: TokenImpl = i8> {
     tokenizer: Rc<dyn ITokenization<Token = TL>>,
     root: Rc<dyn IProduction<Node = TN, Token = TL>>,
@@ -446,11 +457,13 @@ struct FieldTree<T> {
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+/// The line and column information at code point.
 pub struct Position {
     pub line: usize,
     pub column: usize,
 }
 
+/// A wrapper for the input language to be parsed with lines information.
 pub struct Code<'c> {
     pub value: &'c [u8],
     line_breaks: OnceCell<Vec<usize>>,
